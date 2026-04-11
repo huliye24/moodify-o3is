@@ -1,67 +1,51 @@
-# Moodify - 虚拟人物情绪歌词生成器
+# Moodify O3ics - AI 歌词创作工具
 
-## 快速开始
+一个基于 AI 的歌词生成工具，支持通过规则引擎自定义创作风格，让每一条规则都成为你的创作资产。
 
-### 1. 安装依赖
+## 特性
 
-```bash
-pip install -r requirements.txt
-```
-
-### 2. 配置 API Key
-
-复制 `.env.example` 为 `.env`，然后填入你的 DeepSeek API Key：
-
-```bash
-copy .env.example .env
-```
-
-然后编辑 `.env` 文件，将 `your_api_key_here` 替换为你的实际 API Key。
-
-### 3. 运行应用
-
-```bash
-cd c:\Users\Administrator\Desktop\moodify
-streamlit run app.py
-```
-
-## 功能
-
-- 创建和管理虚拟人物（性格、背景故事、音乐风格偏好）
-- 设置人物当前情绪状态
-- 基于人物设定和情绪生成歌词
-- 支持手动编辑和导出歌词
-
-## 项目结构
-
-```
-moodify/
-├── app.py              # Streamlit 主界面
-├── character.py        # 虚拟人物管理
-├── o3ics_generator.py # DeepSeek API 歌词生成
-├── storage.py          # 数据持久化
-├── .env                # 环境变量（API Key）
-├── .env.example        # 环境变量模板
-└── requirements.txt    # Python 依赖
-```
-
-## 获取 DeepSeek API Key
-
-1. 访问 https://platform.deepseek.com
-2. 注册/登录账号
-3. 在 API Keys 页面创建新的 API Key
-4. 将生成的 Key 填入 `.env` 文件
-
-## 使用说明
-
-1. 首次运行会自动创建 `data` 目录和示例人物
-2. 在左侧面板创建/选择虚拟人物
-3. 设置人物的当前情绪
-4. 点击"生成歌词"按钮
-5. 生成的歌词可手动编辑，点击按钮复制
+- **规则引擎**: 自定义情感、主题、风格等创作规则
+- **AI 生成**: 基于 DeepSeek API 智能生成歌词
+- **社区分享**: 支持导入/导出规则包，与社区共享创作资产
+- **项目管理**: 按项目组织歌词创作历史
+- **Suno 集成**: 可将歌词提交至 Suno 生成音乐
 
 ## 技术栈
 
-- **前端**: Streamlit
-- **AI**: DeepSeek API (deepseek-chat)
-- **存储**: 本地 JSON 文件
+- **前端**: React + TypeScript + TailwindCSS
+- **桌面**: Electron
+- **后端**: Prisma + SQLite
+- **AI**: DeepSeek API
+
+## 开发
+
+```bash
+# 安装依赖
+npm install
+
+# 生成 Prisma Client
+npx prisma generate
+
+# 运行开发服务器
+npm run dev
+```
+
+## 规则格式
+
+规则采用 JSON 格式，方便分享和导入：
+
+```json
+{
+  "name": "失恋疗愈",
+  "type": "emotion",
+  "author": "社区用户A",
+  "version": "1.0",
+  "tags": ["爱情", "治愈", "释怀"],
+  "description": "适合表达失恋后逐渐释怀的情���",
+  "config": "放下\n释然\n解脱\n从容\n淡然\n释怀"
+}
+```
+
+## 许可证
+
+MIT License

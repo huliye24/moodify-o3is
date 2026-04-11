@@ -1,34 +1,25 @@
-import { useState, useEffect } from 'react'
 import { useStore } from './stores/useStore'
 import Sidebar from './components/Sidebar'
 import MainContent from './components/MainContent'
+import Player from './components/Player'
 import SettingsModal from './components/SettingsModal'
 import RulesModal from './components/RulesModal'
 
 function App() {
-  const { initialize, currentProject } = useStore()
-  const [showSettings, setShowSettings] = useState(false)
-  const [showRules, setShowRules] = useState(false)
-
-  useEffect(() => {
-    initialize()
-  }, [initialize])
+  const { showSettings, showRules, setShowSettings, setShowRules } = useStore()
 
   return (
-    <div className="h-full flex bg-dark-500">
-      <Sidebar
-        onOpenSettings={() => setShowSettings(true)}
-        onOpenRules={() => setShowRules(true)}
-      />
-      <MainContent />
-
-      {showSettings && (
-        <SettingsModal onClose={() => setShowSettings(false)} />
-      )}
-
-      {showRules && (
-        <RulesModal onClose={() => setShowRules(false)} />
-      )}
+    <div className="h-full flex flex-col bg-dark-500">
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar
+          onOpenSettings={() => setShowSettings(true)}
+          onOpenRules={() => setShowRules(true)}
+        />
+        <MainContent />
+      </div>
+      <Player />
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showRules && <RulesModal onClose={() => setShowRules(false)} />}
     </div>
   )
 }

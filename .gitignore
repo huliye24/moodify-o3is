@@ -1,1 +1,11 @@
 node_modules
+dist
+dist-electron
+.env
+*.log
+.DS_Store
+Thumbs.db
+*.db
+*.db-journal
+prisma/*.db
+prisma/*.db-journal

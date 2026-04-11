@@ -63,6 +63,57 @@ const api = {
     get: (key: string) => ipcRenderer.invoke('settings:get', key),
     set: (key: string, value: any) => ipcRenderer.invoke('settings:set', key, value),
     getAll: () => ipcRenderer.invoke('settings:getAll')
+  },
+
+  // 对话框
+  dialog: {
+    openFile: () => ipcRenderer.invoke('dialog:openFile'),
+    openDirectory: () => ipcRenderer.invoke('dialog:openDirectory')
+  },
+
+  // MusicTrack 管理
+  musicTrack: {
+    getByO3ics: (o3icsId: number) => ipcRenderer.invoke('musicTrack:getByO3ics', o3icsId),
+    create: (data: {
+      o3icsId: number
+      title: string
+      taskId?: string
+      style?: string
+      model?: string
+      instrumental?: boolean
+    }) => ipcRenderer.invoke('musicTrack:create', data),
+    update: (id: number, data: {
+      status?: string
+      audioUrl?: string
+      videoUrl?: string
+      coverImageUrl?: string
+      sunoSongId?: string
+      failReason?: string
+      title?: string
+    }) => ipcRenderer.invoke('musicTrack:update', id, data),
+    delete: (id: number) => ipcRenderer.invoke('musicTrack:delete', id),
+    getByTaskId: (taskId: string) => ipcRenderer.invoke('musicTrack:getByTaskId', taskId)
+  },
+
+  // Suno API
+  suno: {
+    submit: (params: {
+      gpt_description_prompt: string
+      make_instrumental: boolean
+      model: string
+      o3ics?: string
+      title?: string
+      notify_hook?: string
+    }) => ipcRenderer.invoke('suno:submit', params),
+    fetch: (taskIds: string[]) => ipcRenderer.invoke('suno:fetch', taskIds),
+    getApiKey: () => ipcRenderer.invoke('suno:getApiKey'),
+    setApiKey: (apiKey: string) => ipcRenderer.invoke('suno:setApiKey', apiKey),
+    getBaseUrl: () => ipcRenderer.invoke('suno:getBaseUrl'),
+    setBaseUrl: (baseUrl: string) => ipcRenderer.invoke('suno:setBaseUrl', baseUrl),
+    onProgress: (callback: (event: any, data: any) => void) => {
+      ipcRenderer.on('suno:progress', callback)
+      return () => ipcRenderer.removeListener('suno:progress', callback)
+    }
   }
 }
 

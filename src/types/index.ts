@@ -17,6 +17,7 @@ export interface Lyrics {
   promptTemplate: string | null
   favorite: boolean
   createdAt: string
+  sunoPrompts?: string[]  // 生成的3个suno prompt建议
 }
 
 export interface Rule {
@@ -50,6 +51,73 @@ export interface GenerateParams {
   length: string
   customRules?: string
 }
+
+// MusicTrack 类型
+export type MusicTrackStatus = 'pending' | 'submitted' | 'queued' | 'in_progress' | 'success' | 'failure'
+
+export interface MusicTrack {
+  id: number
+  o3icsId: number
+  taskId: string | null
+  sunoSongId: string | null
+  title: string
+  audioUrl: string | null
+  videoUrl: string | null
+  coverImageUrl: string | null
+  status: MusicTrackStatus
+  failReason: string | null
+  style: string | null
+  model: string | null
+  instrumental: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+// Suno API 类型
+export interface SunoSubmitParams {
+  gpt_description_prompt: string
+  make_instrumental: boolean
+  model: string
+  o3ics?: string
+  title?: string
+  notify_hook?: string
+}
+
+export interface SunoTaskResponse {
+  task_id: string
+}
+
+export interface SunoSong {
+  id: string
+  title: string
+  audio_url: string
+  video_url: string
+  image_url: string
+  o3ics: string
+}
+
+export interface SunoTaskResult {
+  taskId: string
+  status: MusicTrackStatus
+  progress: number
+  failReason?: string
+  songs: SunoSong[]
+}
+
+// Suno 支持的模型版本
+export const SUNO_MODELS = [
+  { value: 'chirp-v3-0', label: 'v3.0 基础版' },
+  { value: 'chirp-v3-5', label: 'v3.5 优化版' },
+  { value: 'chirp-v4', label: 'v4.0 增强版' },
+  { value: 'chirp-auk', label: 'v4.5 中文优化版' },
+  { value: 'chirp-v5', label: 'v5.0 最新版' }
+] as const
+
+// 音乐风格选项
+export const MUSIC_STYLES = [
+  '流行', '电子', '民谣', '摇滚', '古典', '说唱', '爵士', '蓝调',
+  'R&B', '嘻哈', '乡村', '拉丁', '轻音乐', '氛围音乐', '舞曲', '新世纪'
+] as const
 
 declare global {
   interface Window {
@@ -101,6 +169,41 @@ declare global {
         get: (key: string) => Promise<any>
         set: (key: string, value: any) => Promise<void>
         getAll: () => Promise<Record<string, any>>
+      }
+      dialog: {
+        openFile: () => Promise<string[]>
+        openDirectory: () => Promise<string | null>
+      }
+      musicTrack: {
+        getByO3ics: (o3icsId: number) => Promise<MusicTrack[]>
+        create: (data: {
+          o3icsId: number
+          title: string
+          taskId?: string
+          style?: string
+          model?: string
+          instrumental?: boolean
+        }) => Promise<MusicTrack>
+        update: (id: number, data: {
+          status?: string
+          audioUrl?: string
+          videoUrl?: string
+          coverImageUrl?: string
+          sunoSongId?: string
+          failReason?: string
+          title?: string
+        }) => Promise<MusicTrack>
+        delete: (id: number) => Promise<void>
+        getByTaskId: (taskId: string) => Promise<MusicTrack[]>
+      }
+      suno: {
+        submit: (params: SunoSubmitParams) => Promise<SunoTaskResponse>
+        fetch: (taskIds: string[]) => Promise<SunoTaskResult[]>
+        getApiKey: () => Promise<string | null>
+        setApiKey: (apiKey: string) => Promise<void>
+        getBaseUrl: () => Promise<string | null>
+        setBaseUrl: (baseUrl: string) => Promise<void>
+        onProgress: (callback: (event: any, data: any) => void) => () => void
       }
     }
   }

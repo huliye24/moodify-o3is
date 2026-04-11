@@ -1,5 +1,6 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
 import { join } from 'path'
+import { existsSync, readFileSync } from 'fs'
 import Store from 'electron-store'
 import { initDatabase, getDb } from './database'
 import { setupIpcHandlers } from './ipc-handlers'
@@ -7,6 +8,28 @@ import { setupIpcHandlers } from './ipc-handlers'
 Store.initRenderer()
 
 const store = new Store()
+
+// 启动时从 config.json 加载配置
+function loadConfigFromFile() {
+  const configPath = join(app.getPath('userData'), 'config.json')
+  if (existsSync(configPath)) {
+    try {
+      const configData = JSON.parse(readFileSync(configPath, 'utf-8'))
+      if (configData.deepseekApiKey) {
+        store.set('deepseekApiKey', configData.deepseekApiKey)
+      }
+      if (configData.sunoApiKey) {
+        store.set('sunoApiKey', configData.sunoApiKey)
+      }
+      if (configData.sunoBaseUrl) {
+        store.set('sunoBaseUrl', configData.sunoBaseUrl)
+      }
+      console.log('配置已从 config.json 加载')
+    } catch (error) {
+      console.error('加载配置文件失败:', error)
+    }
+  }
+}
 
 let mainWindow: BrowserWindow | null = null
 
@@ -45,6 +68,8 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  loadConfigFromFile()
+  
   try {
     await initDatabase()
     console.log('数据库初始化成功')

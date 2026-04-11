@@ -1,59 +1,25 @@
 import { create } from 'zustand'
-import { Project, Lyrics, Rule } from '../types'
+import { persist } from 'zustand/middleware'
 
-interface AppState {
-  // 数据
-  projects: Project[]
-  currentProject: Project | null
-  lyricsList: Lyrics[]
-  favoriteLyrics: Lyrics[]
-  rules: Rule[]
-  apiKey: string | null
+interface Project {
+  id: string
+  name: string
+  createdAt: string
+}
 
-  // UI状态
-  isLoading: boolean
-  isGenerating: boolean
-  selectedLyrics: Lyrics | null
-  showSidebar: boolean
-
-  // 输入状态
-  inputContent: string
-  selectedEmotion: string
-  selectedTheme: string
-  selectedStyle: string
-  selectedRhyme: string
-  selectedLength: string
-  customRules: string
-
-  // 操作
-  initialize: () => Promise<void>
-  loadProjects: () => Promise<void>
-  selectProject: (project: Project | null) => Promise<void>
-  createProject: (name: string, description?: string) => Promise<void>
-  deleteProject: (id: number) => Promise<void>
-
-  loadLyrics: (projectId: number) => Promise<void>
-  selectLyrics: (lyrics: Lyrics | null) => void
-  loadFavorites: () => Promise<void>
-
-  loadRules: () => Promise<void>
-
-  setInputContent: (content: string) => void
-  setSelectedEmotion: (emotion: string) => void
-  setSelectedTheme: (theme: string) => void
-  setSelectedStyle: (style: string) => void
-  setSelectedRhyme: (rhyme: string) => void
-  setSelectedLength: (length: string) => void
-  setCustomRules: (rules: string) => void
-
-  generateLyrics: () => Promise<void>
-  saveLyrics: (title: string, content: string) => Promise<void>
-  updateLyrics: (id: number, title: string, content: string) => Promise<void>
-  deleteLyrics: (id: number) => Promise<void>
-  toggleFavorite: (id: number) => Promise<void>
-
-  setIsGenerating: (value: boolean) => void
-  toggleSidebar: () => void
+interface Lyrics {
+  id: string
+  projectId: string | null
+  title: string
+  content: string
+  emotion: string
+  style: string
+  rhyme: string
+  length: string
+  favorite: boolean
+  createdAt: string
+  saved: boolean
+  sunoPrompts?: string[]
 }
 
 const SYSTEM_PROMPT = `你是一位专业的华语歌词创作者，擅长根据不同的情感和主题创作富有意境的歌词。
@@ -74,147 +40,264 @@ const SYSTEM_PROMPT = `你是一位专业的华语歌词创作者，擅长根据
 - 歌词要有画面感，让听众能够产生共鸣
 - 情感表达要真挚动人`
 
-export const useStore = create<AppState>((set, get) => ({
-  // 初始状态
-  projects: [],
-  currentProject: null,
-  lyricsList: [],
-  favoriteLyrics: [],
-  rules: [],
-  apiKey: null,
-  isLoading: false,
-  isGenerating: false,
-  selectedLyrics: null,
-  showSidebar: true,
-  inputContent: '',
-  selectedEmotion: '',
-  selectedTheme: '',
-  selectedStyle: '流行',
-  selectedRhyme: 'ABAB',
-  selectedLength: '中等',
-  customRules: '',
+const SUNO_PROMPT_SYSTEM = `You are a professional music producer skilled at creating descriptive prompts for Suno music generation based on lyrics.
 
-  // 初始化
-  initialize: async () => {
-    set({ isLoading: true })
-    try {
-      const apiKey = await window.api.settings.get('deepseekApiKey')
-      set({ apiKey })
-      await get().loadProjects()
-      await get().loadRules()
-    } catch (error) {
-      console.error('初始化失败:', error)
-    } finally {
-      set({ isLoading: false })
-    }
-  },
+# Your Task
+Based on the given lyrics content, generate 3 Suno music generation prompts in different styles.
 
-  // 项目管理
-  loadProjects: async () => {
-    try {
-      const projects = await window.api.project.getAll()
-      set({ projects })
-    } catch (error) {
-      console.error('加载项目失败:', error)
-    }
-  },
+# Requirements
+1. Each prompt should include: music style, instrument arrangement, rhythm characteristics, emotional atmosphere
+2. The three prompts should have distinct style differences: e.g., one pop-oriented, one ambient, one dynamic
+3. Language should be concise and accurate, suitable for Suno's gpt_description_prompt
+4. Length should be between 50-150 characters
+5. Always write prompts in English regardless of the lyrics language
+6. Do not output any explanatory text, only the prompt content
 
-  selectProject: async (project) => {
-    set({ currentProject: project, selectedLyrics: null, inputContent: '' })
-    if (project) {
-      await get().loadLyrics(project.id)
-    } else {
-      set({ lyricsList: [] })
-    }
-  },
+# Output Format
+Output 3 prompts, each on a separate line, separated by ###
+Example:
+prompt1 content
+###
+prompt2 content
+###
+prompt3 content`
 
-  createProject: async (name, description) => {
-    try {
-      const project = await window.api.project.create({ name, description })
-      set((state) => ({ projects: [project, ...state.projects] }))
-      await get().selectProject(project)
-    } catch (error) {
-      console.error('创建项目失败:', error)
-    }
-  },
+async function callDeepSeekAPI(systemPrompt: string, userPrompt: string): Promise<string> {
+  const apiKey = localStorage.getItem('moodify-deepseek-key')
+  if (!apiKey) {
+    throw new Error('请先在设置中配置 DeepSeek API Key')
+  }
 
-  deleteProject: async (id) => {
-    try {
-      await window.api.project.delete(id)
-      set((state) => ({
-        projects: state.projects.filter((p) => p.id !== id),
-        currentProject: state.currentProject?.id === id ? null : state.currentProject
-      }))
-    } catch (error) {
-      console.error('删除项目失败:', error)
-    }
-  },
+  const response = await fetch('/api/deepseek/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      temperature: 0.8,
+      max_tokens: 2000
+    })
+  })
 
-  // 歌词管理
-  loadLyrics: async (projectId) => {
-    try {
-      const lyricsList = await window.api.o3ics.getByProject(projectId)
-      set({ lyricsList })
-    } catch (error) {
-      console.error('加载歌词失败:', error)
-    }
-  },
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error?.message || 'API 调用失败')
+  }
 
-  selectLyrics: (lyrics) => {
-    set({ selectedLyrics: lyrics })
-    if (lyrics) {
-      set({
-        inputContent: lyrics.content,
-        selectedEmotion: lyrics.emotion || '',
-        selectedStyle: lyrics.style || '流行'
-      })
-    }
-  },
+  const data = await response.json()
+  return data.choices[0].message.content
+}
 
-  loadFavorites: async () => {
-    try {
-      const favoriteLyrics = await window.api.o3ics.getFavorites()
-      set({ favoriteLyrics })
-    } catch (error) {
-      console.error('加载收藏失败:', error)
-    }
-  },
+async function generateSunoPrompts(lyrics: string, style: string, emotion: string): Promise<string[]> {
+  const userPrompt = `## Lyrics Content
+${lyrics}
 
-  // 规则管理
-  loadRules: async () => {
-    try {
-      const rules = await window.api.rules.getAll()
-      set({ rules })
-    } catch (error) {
-      console.error('加载规则失败:', error)
-    }
-  },
+## Style
+${style}
 
-  // 设置状态
-  setInputContent: (content) => set({ inputContent: content }),
-  setSelectedEmotion: (emotion) => set({ selectedEmotion: emotion }),
-  setSelectedTheme: (theme) => set({ selectedTheme: theme }),
-  setSelectedStyle: (style) => set({ selectedStyle: style }),
-  setSelectedRhyme: (rhyme) => set({ selectedRhyme: rhyme }),
-  setSelectedLength: (length) => set({ selectedLength: length }),
-  setCustomRules: (rules) => set({ customRules: rules }),
+## Emotion
+${emotion || 'Auto-detect based on lyrics'}
 
-  // 生成歌词
-  generateLyrics: async () => {
-    const { inputContent, selectedEmotion, selectedTheme, selectedStyle, selectedRhyme, selectedLength, customRules, currentProject } = get()
+Please generate 3 Suno music description prompts in different styles. Always write in English.`
 
-    if (!inputContent.trim()) {
-      throw new Error('请输入文案内容')
-    }
+  const result = await callDeepSeekAPI(SUNO_PROMPT_SYSTEM, userPrompt)
+  
+  const prompts = result.split('###').map(p => p.trim()).filter(p => p.length > 0)
+  
+  while (prompts.length < 3) {
+    prompts.push(`A ${style} song with emotional vocals, piano accompaniment, and a warm atmosphere`)
+  }
+  
+  return prompts.slice(0, 3)
+}
 
-    if (!currentProject) {
-      throw new Error('请先选择或创建一个项目')
-    }
+interface AppState {
+  projects: Project[]
+  currentProject: Project | null
+  o3icsList: Lyrics[]
+  o3icsHistory: Lyrics[]
+  selectedLyrics: Lyrics | null
 
-    set({ isGenerating: true })
+  inputContent: string
+  selectedEmotion: string
+  selectedTheme: string
+  selectedStyle: string
+  selectedRhyme: string
+  selectedLength: string
 
-    try {
-      const userPrompt = `请根据以下文案创作歌词：
+  isGenerating: boolean
+  showSidebar: boolean
+  showSettings: boolean
+  showRules: boolean
+
+  apiKey: string | null
+
+  setApiKey: (key: string) => void
+  createProject: (name: string) => void
+  deleteProject: (id: string) => void
+  selectProject: (project: Project | null) => void
+
+  setInputContent: (content: string) => void
+  setSelectedEmotion: (emotion: string) => void
+  setSelectedTheme: (theme: string) => void
+  setSelectedStyle: (style: string) => void
+  setSelectedRhyme: (rhyme: string) => void
+  setSelectedLength: (length: string) => void
+
+  selectLyrics: (o3ics: Lyrics | null) => void
+  toggleFavorite: (id: string) => void
+  deleteLyrics: (id: string) => void
+  deleteFromHistory: (id: string) => void
+  saveToProject: (o3ics: Lyrics) => void
+
+  generateLyrics: () => Promise<void>
+  saveLyrics: () => Promise<void>
+
+  toggleSidebar: () => void
+  setShowSettings: (show: boolean) => void
+  setShowRules: (show: boolean) => void
+}
+
+export const useStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      projects: [],
+      currentProject: null,
+      o3icsList: [],
+      o3icsHistory: [],
+      selectedLyrics: null,
+      inputContent: '',
+      selectedEmotion: '',
+      selectedTheme: '',
+      selectedStyle: '流行',
+      selectedRhyme: 'ABAB',
+      selectedLength: '中等',
+      isGenerating: false,
+      showSidebar: true,
+      showSettings: false,
+      showRules: false,
+      apiKey: localStorage.getItem('moodify-deepseek-key'),
+
+      setApiKey: (key) => {
+        localStorage.setItem('moodify-deepseek-key', key)
+        set({ apiKey: key })
+      },
+
+      createProject: (name) => {
+        const project: Project = {
+          id: Date.now().toString(),
+          name,
+          createdAt: new Date().toISOString()
+        }
+        set((state) => ({
+          projects: [project, ...state.projects],
+          currentProject: project,
+          o3icsList: []
+        }))
+      },
+
+      deleteProject: (id) => {
+        set((state) => ({
+          projects: state.projects.filter((p) => p.id !== id),
+          currentProject: state.currentProject?.id === id ? null : state.currentProject,
+          o3icsList: state.currentProject?.id === id ? [] : state.o3icsList
+        }))
+      },
+
+      selectProject: (project) => {
+        set({ currentProject: project, selectedLyrics: null })
+        if (project) {
+          const allLyrics = get().o3icsList.filter((l) => l.projectId === project.id)
+          set({ o3icsList: allLyrics })
+        } else {
+          set({ o3icsList: [] })
+        }
+      },
+
+      setInputContent: (content) => set({ inputContent: content }),
+      setSelectedEmotion: (emotion) => set({ selectedEmotion: emotion }),
+      setSelectedTheme: (theme) => set({ selectedTheme: theme }),
+      setSelectedStyle: (style) => set({ selectedStyle: style }),
+      setSelectedRhyme: (rhyme) => set({ selectedRhyme: rhyme }),
+      setSelectedLength: (length) => set({ selectedLength: length }),
+
+      selectLyrics: (o3ics) => {
+        set({ selectedLyrics: o3ics })
+        if (o3ics) {
+          set({
+            inputContent: o3ics.content,
+            selectedEmotion: o3ics.emotion,
+            selectedStyle: o3ics.style,
+            selectedRhyme: o3ics.rhyme,
+            selectedLength: o3ics.length
+          })
+        }
+      },
+
+      toggleFavorite: (id) => {
+        set((state) => ({
+          o3icsList: state.o3icsList.map((l) =>
+            l.id === id ? { ...l, favorite: !l.favorite } : l
+          ),
+          o3icsHistory: state.o3icsHistory.map((l) =>
+            l.id === id ? { ...l, favorite: !l.favorite } : l
+          ),
+          selectedLyrics: state.selectedLyrics?.id === id
+            ? { ...state.selectedLyrics, favorite: !state.selectedLyrics.favorite }
+            : state.selectedLyrics
+        }))
+      },
+
+      deleteLyrics: (id) => {
+        set((state) => ({
+          o3icsList: state.o3icsList.filter((l) => l.id !== id),
+          selectedLyrics: state.selectedLyrics?.id === id ? null : state.selectedLyrics
+        }))
+      },
+
+      deleteFromHistory: (id) => {
+        set((state) => ({
+          o3icsHistory: state.o3icsHistory.filter((l) => l.id !== id),
+          selectedLyrics: state.selectedLyrics?.id === id ? null : state.selectedLyrics
+        }))
+      },
+
+      saveToProject: (o3ics) => {
+        const { currentProject } = get()
+        if (!currentProject) {
+          throw new Error('请先创建或选择项目')
+        }
+        const savedLyrics: Lyrics = {
+          ...o3ics,
+          projectId: currentProject.id,
+          saved: true
+        }
+        set((state) => ({
+          o3icsList: [savedLyrics, ...state.o3icsList],
+          o3icsHistory: state.o3icsHistory.map((l) =>
+            l.id === o3ics.id ? { ...l, saved: true } : l
+          ),
+          selectedLyrics: savedLyrics
+        }))
+      },
+
+      generateLyrics: async () => {
+        const { inputContent, selectedEmotion, selectedTheme, selectedStyle, selectedRhyme, selectedLength } = get()
+
+        if (!inputContent.trim()) {
+          throw new Error('请输入文案内容')
+        }
+
+        set({ isGenerating: true })
+
+        try {
+          const userPrompt = `请根据以下文案创作歌词：
 
 ## 用户文案
 ${inputContent}
@@ -234,89 +317,109 @@ ${selectedRhyme}
 ## 歌曲长度
 ${selectedLength}
 
-${customRules ? `## 自定义要求\n${customRules}` : ''}
-
 请创作一首完整、优美、有意境的歌词。`
 
-      const result = await window.api.deepseek.generate({
-        systemPrompt: SYSTEM_PROMPT,
-        userPrompt
+          const result = await callDeepSeekAPI(SYSTEM_PROMPT, userPrompt)
+          
+          let sunoPrompts: string[] = []
+          try {
+            sunoPrompts = await generateSunoPrompts(result, selectedStyle, selectedEmotion)
+          } catch (e) {
+            console.warn('生成Suno Prompt失败:', e)
+            sunoPrompts = [
+              `A ${selectedStyle} song with emotional vocals, piano accompaniment, and a warm atmosphere`,
+              `An energetic ${selectedStyle} track with driving drums and guitar riffs`,
+              `An ambient ${selectedStyle} piece with dreamy synthesizers and immersive atmosphere`
+            ]
+          }
+          
+          const newLyrics: Lyrics = {
+            id: Date.now().toString(),
+            projectId: null,
+            title: '生成的歌词',
+            content: result,
+            emotion: selectedEmotion,
+            style: selectedStyle,
+            rhyme: selectedRhyme,
+            length: selectedLength,
+            favorite: false,
+            createdAt: new Date().toISOString(),
+            saved: false,
+            sunoPrompts
+          }
+          set((state) => ({
+            selectedLyrics: newLyrics,
+            o3icsHistory: [newLyrics, ...state.o3icsHistory]
+          }))
+        } finally {
+          set({ isGenerating: false })
+        }
+      },
+
+      saveLyrics: async () => {
+        const { inputContent, currentProject, selectedEmotion, selectedStyle, selectedRhyme, selectedLength, selectedLyrics } = get()
+
+        if (!inputContent.trim()) {
+          throw new Error('歌词内容为空')
+        }
+
+        if (!currentProject) {
+          throw new Error('请先创建或选择项目')
+        }
+
+        const title = selectedLyrics?.title || `歌词 ${new Date().toLocaleString()}`
+
+        if (selectedLyrics) {
+          const savedLyrics: Lyrics = {
+            ...selectedLyrics,
+            projectId: currentProject.id,
+            title,
+            emotion: selectedEmotion,
+            style: selectedStyle,
+            rhyme: selectedRhyme,
+            length: selectedLength,
+            saved: true
+          }
+          set((state) => ({
+            o3icsList: [savedLyrics, ...state.o3icsList.filter(l => l.id !== selectedLyrics.id)],
+            o3icsHistory: state.o3icsHistory.map((l) =>
+              l.id === selectedLyrics.id ? { ...l, saved: true, title } : l
+            ),
+            selectedLyrics: savedLyrics
+          }))
+        } else {
+          const newLyrics: Lyrics = {
+            id: Date.now().toString(),
+            projectId: currentProject.id,
+            title,
+            content: inputContent,
+            emotion: selectedEmotion,
+            style: selectedStyle,
+            rhyme: selectedRhyme,
+            length: selectedLength,
+            favorite: false,
+            createdAt: new Date().toISOString(),
+            saved: true
+          }
+          set((state) => ({
+            o3icsList: [newLyrics, ...state.o3icsList],
+            selectedLyrics: newLyrics
+          }))
+        }
+      },
+
+      toggleSidebar: () => set((state) => ({ showSidebar: !state.showSidebar })),
+      setShowSettings: (show) => set({ showSettings: show }),
+      setShowRules: (show) => set({ showRules: show })
+    }),
+    {
+      name: 'moodify-storage',
+      partialize: (state) => ({
+        projects: state.projects,
+        o3icsList: state.o3icsList,
+        o3icsHistory: state.o3icsHistory,
+        apiKey: state.apiKey
       })
-
-      set({ inputContent: result, selectedLyrics: null })
-      return result
-    } catch (error) {
-      throw error
-    } finally {
-      set({ isGenerating: false })
     }
-  },
-
-  // 保存歌词
-  saveLyrics: async (title, content) => {
-    const { currentProject, selectedEmotion, selectedStyle } = get()
-
-    if (!currentProject) {
-      throw new Error('请先选择项目')
-    }
-
-    try {
-      const lyrics = await window.api.o3ics.create({
-        projectId: currentProject.id,
-        title,
-        content,
-        emotion: selectedEmotion,
-        style: selectedStyle
-      })
-
-      set((state) => ({
-        lyricsList: [lyrics, ...state.lyricsList],
-        selectedLyrics: lyrics
-      }))
-    } catch (error) {
-      throw error
-    }
-  },
-
-  updateLyrics: async (id, title, content) => {
-    try {
-      const lyrics = await window.api.o3ics.update(id, { title, content })
-      set((state) => ({
-        lyricsList: state.lyricsList.map((l) => (l.id === id ? lyrics : l)),
-        selectedLyrics: state.selectedLyrics?.id === id ? lyrics : state.selectedLyrics
-      }))
-    } catch (error) {
-      throw error
-    }
-  },
-
-  deleteLyrics: async (id) => {
-    try {
-      await window.api.o3ics.delete(id)
-      set((state) => ({
-        lyricsList: state.lyricsList.filter((l) => l.id !== id),
-        selectedLyrics: state.selectedLyrics?.id === id ? null : state.selectedLyrics
-      }))
-    } catch (error) {
-      throw error
-    }
-  },
-
-  toggleFavorite: async (id) => {
-    try {
-      const lyrics = await window.api.o3ics.toggleFavorite(id)
-      set((state) => ({
-        lyricsList: state.lyricsList.map((l) => (l.id === id ? lyrics : l)),
-        favoriteLyrics: lyrics.favorite
-          ? [...state.favoriteLyrics, lyrics]
-          : state.favoriteLyrics.filter((l) => l.id !== id),
-        selectedLyrics: state.selectedLyrics?.id === id ? lyrics : state.selectedLyrics
-      }))
-    } catch (error) {
-      throw error
-    }
-  },
-
-  setIsGenerating: (value) => set({ isGenerating: value }),
-  toggleSidebar: () => set((state) => ({ showSidebar: !state.showSidebar }))
-}))
+  )
+)
