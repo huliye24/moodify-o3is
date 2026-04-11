@@ -1,4 +1,4 @@
-# moodify o3is 音乐创作平台 - 技术方案
+# moodify o3is 技术方案
 
 > 设计日期：2026-04-11
 > 作者：Moodify Team

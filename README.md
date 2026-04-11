@@ -1,4 +1,4 @@
-# moodify o3is - AI 歌词创作工具
+# moodify o3is
 
 一个基于 AI 的歌词生成工具，支持通过规则引擎自定义创作风格，让每一条规则都成为你的创作资产。
 
@@ -41,7 +41,7 @@ npm run dev
   "author": "社区用户A",
   "version": "1.0",
   "tags": ["爱情", "治愈", "释怀"],
-  "description": "适合表达失恋后逐渐释怀的情���",
+  "description": "适合表达失恋后逐渐释怀的情感",
   "config": "放下\n释然\n解脱\n从容\n淡然\n释怀"
 }
 ```
