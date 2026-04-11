@@ -9,3 +9,13 @@ Thumbs.db
 *.db-journal
 prisma/*.db
 prisma/*.db-journal
+__pycache__/
+*.pyc
+.moodify_player/
+.moodify_web/
+.vscode/
+.idea/
+.vcursor/
+*.mp3
+*.wav
+*.ogg
