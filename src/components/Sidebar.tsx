@@ -2,6 +2,14 @@ import { useState } from 'react'
 import { useStore } from '../stores/useStore'
 import { Music, Plus, Settings, BookOpen, Trash2, FolderOpen } from 'lucide-react'
 
+const T = {
+  secondary: 'rgba(107,122,143,0.5)',
+  tertiary:   'rgba(107,122,143,0.35)',
+  body:       'rgba(196,212,228,0.75)',
+  heading:    'rgba(196,212,228,0.9)',
+  white:      'rgba(196,212,228,1)',
+}
+
 export default function Sidebar({
   onOpenSettings,
   onOpenRules
@@ -35,27 +43,34 @@ export default function Sidebar({
   return (
     <>
       {/* 侧边栏 */}
-      <div className="w-64 bg-dark-300 border-r border-gray-800 flex flex-col">
+      <div style={{
+        width: '16rem', flexShrink: 0, display: 'flex', flexDirection: 'column',
+        background: 'rgba(107,122,143,0.03)',
+        borderRight: '1px solid rgba(107,122,143,0.12)'
+      }}>
         {/* Logo */}
-        <div className="h-14 flex items-center px-4 border-b border-gray-800">
-          <Music className="w-6 h-6 text-primary-500 mr-2" />
-          <span className="text-lg font-bold text-white">Moodify</span>
+        <div style={{
+          height: '3.5rem', display: 'flex', alignItems: 'center', padding: '0 1rem',
+          borderBottom: '1px solid rgba(107,122,143,0.12)'
+        }}>
+          <Music className="w-6 h-6 mr-2" style={{ color: 'rgba(107,122,143,0.7)' }} />
+          <span style={{ fontSize: '1.125rem', fontWeight: 700, color: T.white }}>Moodify</span>
         </div>
 
         {/* 新建项目按钮 */}
-        <div className="p-3">
+        <div style={{ padding: '0.75rem' }}>
           <button
             onClick={() => setShowNewProject(true)}
-            className="w-full btn-primary flex items-center justify-center gap-2"
+            className="btn-primary w-full flex items-center justify-center gap-2"
           >
-            <Plus className="w-4 h-4" />
-            新建项目
+            <Plus className="w-4 h-4" style={{ color: T.body }} />
+            <span style={{ color: T.white }}>新建项目</span>
           </button>
         </div>
 
         {/* 新建项目表单 */}
         {showNewProject && (
-          <div className="px-3 pb-3">
+          <div style={{ padding: '0 0.75rem 0.75rem' }}>
             <input
               type="text"
               value={newProjectName}
@@ -65,9 +80,9 @@ export default function Sidebar({
               className="input-field text-sm mb-2"
               autoFocus
             />
-            <div className="flex gap-2">
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button onClick={handleCreateProject} className="btn-primary text-sm flex-1">
-                创建
+                <span style={{ color: T.white }}>创建</span>
               </button>
               <button onClick={() => setShowNewProject(false)} className="btn-secondary text-sm">
                 取消
@@ -78,23 +93,48 @@ export default function Sidebar({
 
         {/* 项目列表 */}
         <div className="flex-1 overflow-y-auto">
-          <div className="px-4 py-2 text-xs text-gray-500 uppercase tracking-wider flex items-center gap-2">
-            <FolderOpen className="w-3 h-3" />
+          <div style={{
+            padding: '0.5rem 1rem',
+            fontSize: '0.75rem', color: T.tertiary, textTransform: 'uppercase',
+            letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: '0.5rem'
+          }}>
+            <FolderOpen className="w-3 h-3" style={{ color: T.tertiary }} />
             项目列表
           </div>
           <div className="space-y-1 px-2">
             {projects.map((project) => (
               <div
                 key={project.id}
-                className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                  currentProject?.id === project.id
-                    ? 'bg-primary-600 text-white'
-                    : 'text-gray-300 hover:bg-dark-200'
-                }`}
                 onClick={() => handleSelectProject(project)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.5rem',
+                  padding: '0.5rem 0.75rem', borderRadius: '0.5rem',
+                  cursor: 'pointer', transition: 'all 0.2s',
+                  background: currentProject?.id === project.id
+                    ? 'rgba(107,122,143,0.15)'
+                    : 'transparent',
+                  border: currentProject?.id === project.id
+                    ? '1px solid rgba(107,122,143,0.3)'
+                    : '1px solid transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (currentProject?.id !== project.id) {
+                    (e.currentTarget as HTMLElement).style.background = 'rgba(107,122,143,0.08)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (currentProject?.id !== project.id) {
+                    (e.currentTarget as HTMLElement).style.background = 'transparent'
+                  }
+                }}
               >
-                <BookOpen className="w-4 h-4 flex-shrink-0" />
-                <span className="flex-1 truncate text-sm">{project.name}</span>
+                <BookOpen className="w-4 h-4 flex-shrink-0" style={{ color: currentProject?.id === project.id ? T.white : T.secondary }} />
+                <span className="flex-1 truncate text-sm" style={{
+                  fontSize: '0.875rem',
+                  color: currentProject?.id === project.id ? T.white : T.body,
+                }}>
+                  {project.name}
+                </span>
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
@@ -102,9 +142,19 @@ export default function Sidebar({
                       deleteProject(project.id)
                     }
                   }}
-                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-600 rounded transition-all"
+                  style={{
+                    opacity: 0, padding: '0.25rem', borderRadius: '0.25rem',
+                    background: 'transparent', transition: 'opacity 0.2s'
+                  }}
+                  className="delete-btn"
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = 'transparent'
+                  }}
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <Trash2 className="w-3 h-3" style={{ color: 'rgba(239,68,68,0.7)' }} />
                 </button>
               </div>
             ))}
@@ -112,23 +162,27 @@ export default function Sidebar({
         </div>
 
         {/* 底部工具 */}
-        <div className="border-t border-gray-800 p-3 space-y-2">
+        <div style={{ borderTop: '1px solid rgba(107,122,143,0.12)', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <button
             onClick={onOpenRules}
-            className="w-full btn-secondary text-sm flex items-center justify-center gap-2"
+            className="btn-secondary text-sm flex items-center justify-center gap-2"
           >
-            <Settings className="w-4 h-4" />
-            规则管理
+            <Settings className="w-4 h-4" style={{ color: T.secondary }} />
+            <span>规则管理</span>
           </button>
           <button
             onClick={onOpenSettings}
-            className="w-full btn-secondary text-sm flex items-center justify-center gap-2"
+            className="btn-secondary text-sm flex items-center justify-center gap-2"
           >
-            <Settings className="w-4 h-4" />
-            设置
+            <Settings className="w-4 h-4" style={{ color: T.secondary }} />
+            <span>设置</span>
           </button>
         </div>
       </div>
+
+      <style>{`
+        [class*="rounded-lg"][class*="cursor-pointer"]:hover .delete-btn { opacity: 1 !important; }
+      `}</style>
     </>
   )
 }

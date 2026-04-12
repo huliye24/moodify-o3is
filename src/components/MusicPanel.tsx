@@ -39,10 +39,12 @@ export default function MusicPanel({ o3ics, onSelectTrack, onClose, initialPromp
     if (!o3ics) return
     setLoading(true)
     try {
-      const data = await window.api.musicTrack.getByO3ics(o3ics.id)
-      setTracks(data)
+      const res = await window.api.http.get(`/api/v1/music-tracks?o3ics_id=${o3ics.id}`)
+      const data = res?.data || res || []
+      setTracks(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error('加载曲目失败:', err)
+      setTracks([])
     } finally {
       setLoading(false)
     }
@@ -68,14 +70,17 @@ export default function MusicPanel({ o3ics, onSelectTrack, onClose, initialPromp
         title: o3ics.title
       })
 
-      const track = await window.api.musicTrack.create({
-        o3icsId: o3ics.id,
+      // 通过 HTTP 代理创建 music track
+      const trackRes = await window.api.http.post('/api/v1/music-tracks', {
+        o3ics_id: o3ics.id,
         title: o3ics.title || '未命名',
-        taskId: response.task_id,
+        task_id: response.task_id,
         style: selectedStyles.join(', '),
         model: selectedModel,
-        instrumental
+        instrumental,
+        status: 'submitted',
       })
+      const track = trackRes?.data || trackRes
 
       setTracks(prev => [track, ...prev])
       startPolling(response.task_id)
@@ -87,24 +92,24 @@ export default function MusicPanel({ o3ics, onSelectTrack, onClose, initialPromp
     }
   }
 
-  const handleDelete = async (trackId: number, e: React.MouseEvent) => {
+  const handleDelete = async (trackId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     try {
-      await window.api.musicTrack.delete(trackId)
+      await window.api.http.post('/api/v1/music-tracks', { id: trackId })
       setTracks(prev => prev.filter(t => t.id !== trackId))
     } catch (err) {
       console.error('删除失败:', err)
     }
   }
 
-  const handlePlay = (track: MusicTrack) => {
-    if (track.audioUrl) {
+  const handlePlay = (track: any) => {
+    if (track.audio_url) {
       setCurrentTrack(track)
       onSelectTrack?.(track)
     }
   }
 
-  const handleRegenerate = (_track: MusicTrack) => {
+  const handleRegenerate = (_track: any) => {
     // TODO: 实现重新生成逻辑
   }
 
@@ -129,10 +134,10 @@ export default function MusicPanel({ o3ics, onSelectTrack, onClose, initialPromp
   if (!o3ics) {
     return (
       <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-        <div className="bg-dark-300 rounded-xl w-full max-w-lg border border-gray-700 shadow-2xl">
-          <div className="p-6 text-center text-gray-500">
-            <Music className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>请先在左侧选择或创建歌词</p>
+        <div className="bg-dark-300 rounded-xl w-full max-w-lg border border-gray-700 shadow-2xl" style={{ background: 'rgba(107,122,143,0.04)', border: '1px solid rgba(107,122,143,0.15)' }}>
+          <div className="p-6 text-center">
+            <Music className="w-12 h-12 mx-auto mb-3 opacity-50" style={{ color: 'rgba(107,122,143,0.5)' }} />
+            <p style={{ color: 'rgba(107,122,143,0.5)' }}>请先在左侧选择或创建歌词</p>
             <button onClick={onClose} className="btn-secondary mt-4">关闭</button>
           </div>
         </div>
@@ -142,24 +147,24 @@ export default function MusicPanel({ o3ics, onSelectTrack, onClose, initialPromp
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-dark-300 rounded-xl w-full max-w-lg border border-gray-700 shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+      <div className="bg-dark-300 rounded-xl w-full max-w-lg border border-gray-700 shadow-2xl max-h-[90vh] overflow-hidden flex flex-col" style={{ background: 'rgba(107,122,143,0.04)', border: '1px solid rgba(107,122,143,0.15)' }}>
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(107,122,143,0.15)' }}>
           <h2 className="font-semibold flex items-center gap-2">
-            <Music className="w-5 h-5 text-primary-400" />
+            <Music className="w-5 h-5" style={{ color: 'rgba(107,122,143,0.7)' }} />
             音乐生成
           </h2>
-          <button onClick={onClose} className="p-2 hover:bg-dark-200 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 rounded-lg transition-colors" onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(107,122,143,0.08)' }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <p className="px-6 py-3 text-sm text-gray-400 border-b border-gray-700">
+        <p className="px-6 py-3 text-sm border-b" style={{ color: 'rgba(107,122,143,0.5)', borderBottom: '1px solid rgba(107,122,143,0.15)' }}>
           歌词: {o3ics.title}
         </p>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-2">音乐风格</label>
+            <label className="block text-xs mb-2" style={{ color: 'rgba(107,122,143,0.5)' }}>音乐风格</label>
             <div className="relative">
               <button
                 onClick={() => setShowStyleDropdown(!showStyleDropdown)}
@@ -169,14 +174,17 @@ export default function MusicPanel({ o3ics, onSelectTrack, onClose, initialPromp
                 <ChevronDown className={`w-4 h-4 transition-transform ${showStyleDropdown ? 'rotate-180' : ''}`} />
               </button>
               {showStyleDropdown && (
-                <div className="absolute z-20 mt-1 w-full bg-dark-200 border border-gray-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                <div className="absolute z-20 mt-1 w-full rounded-lg shadow-xl max-h-48 overflow-y-auto" style={{ background: 'rgba(107,122,143,0.08)', border: '1px solid rgba(107,122,143,0.15)' }}>
                   {MUSIC_STYLES.map(style => (
                     <button
                       key={style}
                       onClick={() => toggleStyle(style)}
-                      className={`w-full px-3 py-2 text-left text-sm hover:bg-dark-300 transition-colors ${
-                        selectedStyles.includes(style) ? 'text-primary-400 bg-primary-400/10' : ''
+                      className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                        selectedStyles.includes(style) ? '' : ''
                       }`}
+                      style={selectedStyles.includes(style) ? { background: 'rgba(107,122,143,0.08)', color: 'rgba(107,122,143,0.7)' } : {}}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(107,122,143,0.08)' }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = selectedStyles.includes(style) ? 'rgba(107,122,143,0.08)' : '' }}
                     >
                       {style}
                     </button>
@@ -187,7 +195,7 @@ export default function MusicPanel({ o3ics, onSelectTrack, onClose, initialPromp
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-2">模型版本</label>
+            <label className="block text-xs mb-2" style={{ color: 'rgba(107,122,143,0.5)' }}>模型版本</label>
             <div className="relative">
               <button
                 onClick={() => setShowModelDropdown(!showModelDropdown)}
@@ -197,14 +205,15 @@ export default function MusicPanel({ o3ics, onSelectTrack, onClose, initialPromp
                 <ChevronDown className={`w-4 h-4 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
               </button>
               {showModelDropdown && (
-                <div className="absolute z-20 mt-1 w-full bg-dark-200 border border-gray-700 rounded-lg shadow-xl">
+                <div className="absolute z-20 mt-1 w-full rounded-lg shadow-xl" style={{ background: 'rgba(107,122,143,0.08)', border: '1px solid rgba(107,122,143,0.15)' }}>
                   {SUNO_MODELS.map(model => (
                     <button
                       key={model.value}
                       onClick={() => { setSelectedModel(model.value); setShowModelDropdown(false) }}
-                      className={`w-full px-3 py-2 text-left text-sm hover:bg-dark-300 transition-colors ${
-                        selectedModel === model.value ? 'text-primary-400 bg-primary-400/10' : ''
-                      }`}
+                      className="w-full px-3 py-2 text-left text-sm transition-colors"
+                      style={selectedModel === model.value ? { background: 'rgba(107,122,143,0.08)', color: 'rgba(107,122,143,0.7)' } : {}}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(107,122,143,0.08)' }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = selectedModel === model.value ? 'rgba(107,122,143,0.08)' : '' }}
                     >
                       {model.label}
                     </button>
@@ -215,7 +224,7 @@ export default function MusicPanel({ o3ics, onSelectTrack, onClose, initialPromp
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-2">自定义描述 (可选)</label>
+            <label className="block text-xs mb-2" style={{ color: 'rgba(107,122,143,0.5)' }}>自定义描述 (可选)</label>
             <textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
@@ -229,9 +238,10 @@ export default function MusicPanel({ o3ics, onSelectTrack, onClose, initialPromp
               type="checkbox"
               checked={instrumental}
               onChange={(e) => setInstrumental(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-600 bg-dark-200 text-primary-500 focus:ring-primary-500"
+              className="w-4 h-4 rounded text-primary-500 bg-dark-200"
+              style={{ border: '1px solid rgba(107,122,143,0.15)', color: 'rgba(107,122,143,0.7)', boxShadow: '0 0 0 2px rgba(107,122,143,0.2)' }}
             />
-            <span className="text-sm text-gray-300">纯音乐 (无人声)</span>
+            <span className="text-sm" style={{ color: 'rgba(196,212,228,0.75)' }}>纯音乐 (无人声)</span>
           </label>
 
           <button
@@ -254,31 +264,31 @@ export default function MusicPanel({ o3ics, onSelectTrack, onClose, initialPromp
 
           {isGenerating && (
             <div className="space-y-2">
-              <div className="h-2 bg-dark-200 rounded-full overflow-hidden">
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(107,122,143,0.08)' }}>
                 <div
-                  className="h-full bg-gradient-to-r from-primary-500 to-primary-400 transition-all duration-500"
-                  style={{ width: `${generationProgress}%` }}
+                  className="h-full transition-all duration-500"
+                  style={{ width: `${generationProgress}%`, background: 'linear-gradient(to right, rgba(107,122,143,0.7), rgba(107,122,143,0.7))' }}
                 />
               </div>
-              <p className="text-xs text-gray-400 text-center">正在生成，请稍候...</p>
+              <p className="text-xs text-center" style={{ color: 'rgba(107,122,143,0.5)' }}>正在生成，请稍候...</p>
             </div>
           )}
 
           {error && (
             <div className="bg-red-600/20 border border-red-600/30 rounded-lg px-4 py-3 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-              <span className="text-sm text-red-200">{error}</span>
+              <AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: 'rgba(239,68,68,0.7)' }} />
+              <span className="text-sm" style={{ color: 'rgba(252,165,165,0.8)' }}>{error}</span>
             </div>
           )}
 
           <div>
-            <h3 className="text-sm font-medium text-gray-400 mb-3">生成的曲目</h3>
+            <h3 className="text-sm font-medium mb-3" style={{ color: 'rgba(107,122,143,0.5)' }}>生成的曲目</h3>
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
+                <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'rgba(107,122,143,0.5)' }} />
               </div>
             ) : tracks.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8" style={{ color: 'rgba(107,122,143,0.5)' }}>
                 <Music className="w-8 h-8 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">暂无生成的曲目</p>
               </div>
@@ -288,45 +298,55 @@ export default function MusicPanel({ o3ics, onSelectTrack, onClose, initialPromp
                   <div
                     key={track.id}
                     onClick={() => handlePlay(track)}
-                    className={`p-3 rounded-lg border transition-colors cursor-pointer ${
-                      track.status === 'success' && track.audioUrl
-                        ? 'bg-dark-200 border-gray-700 hover:border-primary-500/50'
-                        : 'bg-dark-300 border-gray-800 opacity-60'
-                    }`}
+                    className="p-3 rounded-lg border transition-colors cursor-pointer"
+                    style={track.status === 'success' && track.audio_url
+                      ? { background: 'rgba(107,122,143,0.08)', border: '1px solid rgba(107,122,143,0.15)' }
+                      : { background: 'rgba(107,122,143,0.04)', border: '1px solid rgba(107,122,143,0.1)', opacity: 0.6 }
+                    }
+                    onMouseEnter={(e) => {
+                      if (track.status === 'success' && track.audio_url) {
+                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(107,122,143,0.3)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (track.status === 'success' && track.audio_url) {
+                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(107,122,143,0.15)'
+                      }
+                    }}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-12 h-12 rounded-lg bg-dark-300 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        {track.coverImageUrl ? (
-                          <img src={track.coverImageUrl} alt="" className="w-full h-full object-cover" />
+                      <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: 'rgba(107,122,143,0.04)' }}>
+                        {track.cover_image_url ? (
+                          <img src={track.cover_image_url} alt="" className="w-full h-full object-cover" />
                         ) : track.status === 'success' ? (
-                          <Music className="w-5 h-5 text-primary-400" />
+                          <Music className="w-5 h-5" style={{ color: 'rgba(107,122,143,0.7)' }} />
                         ) : (
-                          <Loader2 className="w-5 h-5 text-gray-500 animate-spin" />
+                          <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'rgba(107,122,143,0.5)' }} />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm truncate">{track.title}</h4>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <h4 className="font-medium text-sm truncate" style={{ color: 'rgba(196,212,228,0.9)' }}>{track.title}</h4>
+                        <p className="text-xs mt-0.5" style={{ color: 'rgba(107,122,143,0.5)' }}>
                           {getStatusDisplay(track.status)}
                           {track.style && ` · ${track.style}`}
                         </p>
-                        {track.status === 'failure' && track.failReason && (
-                          <p className="text-xs text-red-400 mt-1">{track.failReason}</p>
+                        {track.status === 'failure' && track.fail_reason && (
+                          <p className="text-xs mt-1" style={{ color: 'rgba(252,165,165,0.8)' }}>{track.fail_reason}</p>
                         )}
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        {track.status === 'success' && track.audioUrl && (
+                        {track.status === 'success' && track.audio_url && (
                           <>
-                            <button onClick={(e) => { e.stopPropagation(); handlePlay(track) }} className="p-2 hover:bg-dark-300 rounded-lg" title="播放">
+                            <button onClick={(e) => { e.stopPropagation(); handlePlay(track) }} className="p-2 rounded-lg" title="播放" onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(107,122,143,0.08)' }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                               <Play className="w-4 h-4" />
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); handleRegenerate(track) }} className="p-2 hover:bg-dark-300 rounded-lg" title="重新生成">
+                            <button onClick={(e) => { e.stopPropagation(); handleRegenerate(track) }} className="p-2 rounded-lg" title="重新生成" onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(107,122,143,0.08)' }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}>
                               <RefreshCw className="w-4 h-4" />
                             </button>
                           </>
                         )}
-                        <button onClick={(e) => handleDelete(track.id, e)} className="p-2 hover:bg-red-600/20 rounded-lg text-gray-400 hover:text-red-400" title="删除">
-                          <Trash2 className="w-4 h-4" />
+                        <button onClick={(e) => handleDelete(track.id, e)} className="p-2 rounded-lg" title="删除" onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.2)'; (e.currentTarget.querySelector('svg') as SVGElement)?.style && ((e.currentTarget.querySelector('svg') as SVGElement).style.color = 'rgba(239,68,68,0.7)') }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; const svg = e.currentTarget.querySelector('svg') as SVGElement; if (svg) svg.style.color = '' }}>
+                          <Trash2 className="w-4 h-4" style={{ color: 'rgba(107,122,143,0.5)' }} />
                         </button>
                       </div>
                     </div>

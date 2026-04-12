@@ -52,25 +52,25 @@ export interface GenerateParams {
   customRules?: string
 }
 
-// MusicTrack 类型
+// MusicTrack 类型 (与后端 snake_case JSON 对应)
 export type MusicTrackStatus = 'pending' | 'submitted' | 'queued' | 'in_progress' | 'success' | 'failure'
 
 export interface MusicTrack {
-  id: number
-  o3icsId: number
-  taskId: string | null
-  sunoSongId: string | null
+  id: string
+  o3ics_id: string
+  task_id: string | null
+  suno_song_id: string | null
   title: string
-  audioUrl: string | null
-  videoUrl: string | null
-  coverImageUrl: string | null
+  audio_url: string | null
+  video_url: string | null
+  cover_image_url: string | null
   status: MusicTrackStatus
-  failReason: string | null
+  fail_reason: string | null
   style: string | null
   model: string | null
   instrumental: boolean
-  createdAt: string
-  updatedAt: string
+  created_at: string
+  updated_at: string
 }
 
 // Suno API 类型
@@ -122,41 +122,13 @@ export const MUSIC_STYLES = [
 declare global {
   interface Window {
     api: {
-      project: {
-        getAll: () => Promise<Project[]>
-        create: (data: { name: string; description?: string }) => Promise<Project>
-        update: (id: number, data: { name?: string; description?: string }) => Promise<Project>
-        delete: (id: number) => Promise<void>
+      window: {
+        openPlayer: () => Promise<void>
+        openWeb:   () => Promise<void>
+        openMain:  () => Promise<void>
       }
-      o3ics: {
-        getByProject: (projectId: number) => Promise<Lyrics[]>
-        create: (data: {
-          projectId: number
-          title: string
-          content: string
-          style?: string
-          emotion?: string
-          promptTemplate?: string
-        }) => Promise<Lyrics>
-        update: (id: number, data: { title?: string; content?: string }) => Promise<Lyrics>
-        toggleFavorite: (id: number) => Promise<Lyrics>
-        delete: (id: number) => Promise<void>
-        getFavorites: () => Promise<Lyrics[]>
-      }
-      rules: {
-        getAll: () => Promise<Rule[]>
-        getByType: (type: string) => Promise<Rule[]>
-        create: (data: { name: string; type: string; config: string; priority?: number }) => Promise<Rule>
-        update: (id: number, data: {
-          name?: string
-          config?: string
-          priority?: number
-          isActive?: boolean
-        }) => Promise<Rule>
-        delete: (id: number) => Promise<void>
-      }
-      apiLog: {
-        getRecent: (limit?: number) => Promise<ApiLog[]>
+      shell: {
+        openExternal: (url: string) => Promise<void>
       }
       deepseek: {
         generate: (params: {
@@ -164,46 +136,37 @@ declare global {
           userPrompt: string
           model?: string
         }) => Promise<string>
-      }
-      settings: {
-        get: (key: string) => Promise<any>
-        set: (key: string, value: any) => Promise<void>
-        getAll: () => Promise<Record<string, any>>
-      }
-      dialog: {
-        openFile: () => Promise<string[]>
-        openDirectory: () => Promise<string | null>
-      }
-      musicTrack: {
-        getByO3ics: (o3icsId: number) => Promise<MusicTrack[]>
-        create: (data: {
-          o3icsId: number
-          title: string
-          taskId?: string
-          style?: string
-          model?: string
-          instrumental?: boolean
-        }) => Promise<MusicTrack>
-        update: (id: number, data: {
-          status?: string
-          audioUrl?: string
-          videoUrl?: string
-          coverImageUrl?: string
-          sunoSongId?: string
-          failReason?: string
-          title?: string
-        }) => Promise<MusicTrack>
-        delete: (id: number) => Promise<void>
-        getByTaskId: (taskId: string) => Promise<MusicTrack[]>
+        getApiKey: () => Promise<string | null>
+        setApiKey: (apiKey: string) => Promise<void>
       }
       suno: {
         submit: (params: SunoSubmitParams) => Promise<SunoTaskResponse>
         fetch: (taskIds: string[]) => Promise<SunoTaskResult[]>
-        getApiKey: () => Promise<string | null>
-        setApiKey: (apiKey: string) => Promise<void>
+        getApiKey:  () => Promise<string | null>
+        setApiKey:  (apiKey: string)  => Promise<void>
         getBaseUrl: () => Promise<string | null>
         setBaseUrl: (baseUrl: string) => Promise<void>
         onProgress: (callback: (event: any, data: any) => void) => () => void
+      }
+      settings: {
+        get:    (key: string) => Promise<any>
+        set:    (key: string, value: any) => Promise<void>
+        getAll: () => Promise<Record<string, any>>
+      }
+      dialog: {
+        openFile:     () => Promise<string[]>
+        openDirectory: () => Promise<string | null>
+      }
+      http: {
+        get:    (url: string) => Promise<any>
+        post:   (url: string, body: any) => Promise<any>
+        delete: (url: string) => Promise<any>
+      }
+      rules: {
+        getAll:    () => Promise<any[]>
+        create:    (rule: any) => Promise<any>
+        update:    (id: number, data: any) => Promise<any>
+        delete:    (id: number) => Promise<any>
       }
     }
   }
