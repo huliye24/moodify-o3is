@@ -41,6 +41,9 @@ func main() {
 		&model.LocalSong{},
 		&model.LocalPlaylist{},
 		&model.LocalPlaylistSong{},
+		&model.PlayerState{},
+		&model.PlayHistory{},
+		&model.FavoriteSong{},
 	); err != nil {
 		log.Fatalf("数据库迁移失败: %v", err)
 	}
@@ -144,6 +147,21 @@ func main() {
 			localPlaylists.GET("/:id/songs", h.GetLocalPlaylistSongs)
 			localPlaylists.POST("/:id/songs", h.AddSongToPlaylist)
 			localPlaylists.DELETE("/:id/songs", h.RemoveSongFromPlaylist)
+		}
+
+		// 播放器 API
+		player := api.Group("/player")
+		{
+			player.GET("/state", h.GetPlayerState)
+			player.POST("/state", h.SavePlayerState)
+			player.GET("/history", h.GetPlayHistory)
+			player.POST("/history", h.AddPlayHistory)
+			player.DELETE("/history", h.ClearPlayHistory)
+			player.GET("/favorites", h.GetFavorites)
+			player.POST("/favorites", h.AddFavorite)
+			player.DELETE("/favorites", h.RemoveFavorite)
+			player.GET("/favorites/check", h.CheckFavorite)
+			player.GET("/search", h.SearchSongs)
 		}
 
 		api.GET("/options", h.GetOptions)

@@ -350,3 +350,114 @@ func (r *Repository) AddSongToPlaylist(playlistID, songID string) error {
 func (r *Repository) RemoveSongFromPlaylist(playlistID, songID string) error {
 	return r.db.Delete(&model.LocalPlaylistSong{}, "playlist_id = ? AND song_id = ?", playlistID, songID).Error
 }
+
+// ============ Player Repository Methods ============
+
+// PlayerState
+func (r *Repository) GetPlayerState(userID string) (*model.PlayerState, error) {
+	var state model.PlayerState
+	err := r.db.Where("user_id = ?", userID).First(&state).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	return &state, err
+}
+
+func (r *Repository) SavePlayerState(state *model.PlayerState) error {
+	// 先尝试更新
+	result := r.db.Where("user_id = ?", state.UserID).Updates(map[string]interface{}{
+		"source_type":  state.SourceType,
+		"source_id":    state.SourceID,
+		"current_time": state.CurrentTime,
+		"volume":       state.Volume,
+		"is_playing":   state.IsPlaying,
+		"repeat_mode":  state.RepeatMode,
+		"shuffle":      state.Shuffle,
+	})
+	if result.RowsAffected == 0 {
+		// 没有记录，创建一个
+		return r.db.Create(state).Error
+	}
+	return result.Error
+}
+
+// PlayHistory
+func (r *Repository) GetPlayHistory(userID string, limit int) ([]model.PlayHistory, error) {
+	var history []model.PlayHistory
+	err := r.db.Where("user_id = ?", userID).
+		Order("played_at desc").
+		Limit(limit).
+		Find(&history).Error
+	return history, err
+}
+
+func (r *Repository) AddPlayHistory(entry *model.PlayHistory) error {
+	// 限制历史记录数量，最多保留 500 条
+	var count int64
+	r.db.Model(&model.PlayHistory{}).Where("user_id = ?", entry.UserID).Count(&count)
+	if count >= 500 {
+		// 删除最老的记录
+		r.db.Where("user_id = ? AND id IN (SELECT id FROM play_history WHERE user_id = ? ORDER BY played_at ASC LIMIT ?)",
+			entry.UserID, entry.UserID, count-400).Delete(&model.PlayHistory{})
+	}
+	return r.db.Create(entry).Error
+}
+
+func (r *Repository) ClearPlayHistory(userID string) error {
+	return r.db.Where("user_id = ?", userID).Delete(&model.PlayHistory{}).Error
+}
+
+// Favorites
+func (r *Repository) GetFavorites(userID, songType string) ([]model.FavoriteSong, error) {
+	var favorites []model.FavoriteSong
+	query := r.db.Where("user_id = ?", userID)
+	if songType != "" {
+		query = query.Where("song_type = ?", songType)
+	}
+	err := query.Order("created_at desc").Find(&favorites).Error
+	return favorites, err
+}
+
+func (r *Repository) AddFavorite(fav *model.FavoriteSong) error {
+	// 检查是否已存在
+	var existing model.FavoriteSong
+	err := r.db.Where("user_id = ? AND song_id = ? AND song_type = ?", fav.UserID, fav.SongID, fav.SongType).First(&existing).Error
+	if err == nil {
+		return nil // 已存在
+	}
+	if err != gorm.ErrRecordNotFound {
+		return err
+	}
+	return r.db.Create(fav).Error
+}
+
+func (r *Repository) RemoveFavorite(userID, songID, songType string) error {
+	return r.db.Where("user_id = ? AND song_id = ? AND song_type = ?", userID, songID, songType).Delete(&model.FavoriteSong{}).Error
+}
+
+func (r *Repository) IsFavorite(userID, songID, songType string) (bool, error) {
+	var count int64
+	err := r.db.Model(&model.FavoriteSong{}).
+		Where("user_id = ? AND song_id = ? AND song_type = ?", userID, songID, songType).
+		Count(&count).Error
+	return count > 0, err
+}
+
+// Search
+func (r *Repository) SearchSongs(query string, page, pageSize int) ([]model.LocalSong, int64, error) {
+	var songs []model.LocalSong
+	var total int64
+
+	q := "%" + query + "%"
+	searchQuery := r.db.Model(&model.LocalSong{}).Where(
+		"title LIKE ? OR artist_name LIKE ? OR album_name LIKE ?", q, q, q,
+	)
+	searchQuery.Count(&total)
+
+	offset := (page - 1) * pageSize
+	err := searchQuery.Order("play_count desc, created_at desc").
+		Offset(offset).Limit(pageSize).
+		Find(&songs).Error
+
+	return songs, total, err
+}

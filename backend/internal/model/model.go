@@ -227,3 +227,42 @@ type LocalPlaylistSong struct {
 	SongID      string `gorm:"type:varchar(36);not null" json:"song_id"`
 	Position    int    `gorm:"default:0" json:"position"`
 }
+
+// ============ Player Models ============
+
+// PlayerState 播放器状态
+type PlayerState struct {
+	BaseModel
+	UserID      string `gorm:"type:varchar(36)" json:"user_id"`
+	SourceType  string `gorm:"type:varchar(20)" json:"source_type"` // local, generated, suno
+	SourceID    string `gorm:"type:varchar(36)" json:"source_id"`
+	CurrentTime int    `gorm:"default:0" json:"current_time"`
+	Volume      float64 `gorm:"default:0.8" json:"volume"`
+	IsPlaying   bool   `gorm:"default:false" json:"is_playing"`
+	RepeatMode  string `gorm:"type:varchar(10);default:'none'" json:"repeat_mode"` // none, one, all
+	Shuffle     bool   `gorm:"default:false" json:"shuffle"`
+}
+
+// PlayHistory 播放历史
+type PlayHistory struct {
+	BaseModel
+	UserID    string `gorm:"type:varchar(36)" json:"user_id"`
+	SongID    string `gorm:"type:varchar(36)" json:"song_id"`
+	SongType  string `gorm:"type:varchar(20)" json:"song_type"` // local, generated, suno
+	Title     string `gorm:"type:varchar(200)" json:"title"`
+	Artist    string `gorm:"type:varchar(200)" json:"artist"`
+	Duration  int    `json:"duration"`
+	PlayedAt  int64  `json:"played_at"`
+}
+
+// FavoriteSong 收藏歌曲
+type FavoriteSong struct {
+	BaseModel
+	UserID    string `gorm:"type:varchar(36)" json:"user_id"`
+	SongID    string `gorm:"type:varchar(36)" json:"song_id"`
+	SongType  string `gorm:"type:varchar(20)" json:"song_type"`
+	Title     string `gorm:"type:varchar(200)" json:"title"`
+	Artist    string `gorm:"type:varchar(200)" json:"artist"`
+	AudioURL  string `gorm:"type:text" json:"audio_url"`
+	CoverURL  string `gorm:"type:text" json:"cover_url"`
+}

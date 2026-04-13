@@ -885,3 +885,184 @@ func (h *Handler) ImportSongs(c *gin.Context) {
 		"total":    len(songs),
 	})
 }
+
+// ============ Player API Handlers ============
+
+// GetPlayerState 获取播放器状态
+func (h *Handler) GetPlayerState(c *gin.Context) {
+	userID := c.DefaultQuery("user_id", "default")
+	state, err := h.repo.GetPlayerState(userID)
+	if err != nil {
+		response.Error(c, 500, "获取播放器状态失败")
+		return
+	}
+	if state == nil {
+		// 返回默认状态
+		response.Success(c, map[string]interface{}{
+			"user_id":     userID,
+			"source_type": "local",
+			"source_id":   "",
+			"current_time": 0,
+			"volume":       0.8,
+			"is_playing":   false,
+			"repeat_mode":  "none",
+			"shuffle":      false,
+		})
+		return
+	}
+	response.Success(c, state)
+}
+
+// SavePlayerState 保存播放器状态
+func (h *Handler) SavePlayerState(c *gin.Context) {
+	var state model.PlayerState
+	if err := c.ShouldBindJSON(&state); err != nil {
+		response.Error(c, 400, "无效的请求数据")
+		return
+	}
+	if state.UserID == "" {
+		state.UserID = "default"
+	}
+	if err := h.repo.SavePlayerState(&state); err != nil {
+		response.Error(c, 500, "保存播放器状态失败")
+		return
+	}
+	response.Success(c, state)
+}
+
+// GetPlayHistory 获取播放历史
+func (h *Handler) GetPlayHistory(c *gin.Context) {
+	userID := c.DefaultQuery("user_id", "default")
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	history, err := h.repo.GetPlayHistory(userID, limit)
+	if err != nil {
+		response.Error(c, 500, "获取播放历史失败")
+		return
+	}
+	response.Success(c, map[string]interface{}{
+		"history": history,
+		"total":   len(history),
+	})
+}
+
+// AddPlayHistory 添加播放历史
+func (h *Handler) AddPlayHistory(c *gin.Context) {
+	var entry model.PlayHistory
+	if err := c.ShouldBindJSON(&entry); err != nil {
+		response.Error(c, 400, "无效的请求数据")
+		return
+	}
+	if entry.UserID == "" {
+		entry.UserID = "default"
+	}
+	if err := h.repo.AddPlayHistory(&entry); err != nil {
+		response.Error(c, 500, "添加播放历史失败")
+		return
+	}
+	response.Success(c, entry)
+}
+
+// ClearPlayHistory 清除播放历史
+func (h *Handler) ClearPlayHistory(c *gin.Context) {
+	userID := c.DefaultQuery("user_id", "default")
+	if err := h.repo.ClearPlayHistory(userID); err != nil {
+		response.Error(c, 500, "清除播放历史失败")
+		return
+	}
+	response.SuccessWithMsg(c, "清除成功", nil)
+}
+
+// GetFavorites 获取收藏列表
+func (h *Handler) GetFavorites(c *gin.Context) {
+	userID := c.DefaultQuery("user_id", "default")
+	songType := c.Query("type")
+	favorites, err := h.repo.GetFavorites(userID, songType)
+	if err != nil {
+		response.Error(c, 500, "获取收藏列表失败")
+		return
+	}
+	response.Success(c, map[string]interface{}{
+		"favorites": favorites,
+		"total":    len(favorites),
+	})
+}
+
+// AddFavorite 添加收藏
+func (h *Handler) AddFavorite(c *gin.Context) {
+	var fav model.FavoriteSong
+	if err := c.ShouldBindJSON(&fav); err != nil {
+		response.Error(c, 400, "无效的请求数据")
+		return
+	}
+	if fav.UserID == "" {
+		fav.UserID = "default"
+	}
+	if err := h.repo.AddFavorite(&fav); err != nil {
+		response.Error(c, 500, "添加收藏失败")
+		return
+	}
+	response.Success(c, fav)
+}
+
+// RemoveFavorite 移除收藏
+func (h *Handler) RemoveFavorite(c *gin.Context) {
+	var params struct {
+		UserID  string `json:"user_id"`
+		SongID  string `json:"song_id"`
+		SongType string `json:"song_type"`
+	}
+	if err := c.ShouldBindJSON(&params); err != nil {
+		response.Error(c, 400, "无效的请求数据")
+		return
+	}
+	userID := params.UserID
+	if userID == "" {
+		userID = "default"
+	}
+	if err := h.repo.RemoveFavorite(userID, params.SongID, params.SongType); err != nil {
+		response.Error(c, 500, "移除收藏失败")
+		return
+	}
+	response.SuccessWithMsg(c, "移除成功", nil)
+}
+
+// CheckFavorite 检查是否已收藏
+func (h *Handler) CheckFavorite(c *gin.Context) {
+	userID := c.DefaultQuery("user_id", "default")
+	songID := c.Query("song_id")
+	songType := c.Query("type")
+	isFav, err := h.repo.IsFavorite(userID, songID, songType)
+	if err != nil {
+		response.Error(c, 500, "检查收藏状态失败")
+		return
+	}
+	response.Success(c, map[string]interface{}{
+		"is_favorite": isFav,
+	})
+}
+
+// SearchSongs 搜索歌曲
+func (h *Handler) SearchSongs(c *gin.Context) {
+	query := c.Query("q")
+	if query == "" {
+		response.Error(c, 400, "搜索关键词不能为空")
+		return
+	}
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	page, pageSize = repository.CalculatePagination(page, pageSize)
+	songs, total, err := h.repo.SearchSongs(query, page, pageSize)
+	if err != nil {
+		response.Error(c, 500, "搜索失败")
+		return
+	}
+	response.Success(c, map[string]interface{}{
+		"songs":     songs,
+		"total":    total,
+		"page":     page,
+		"pageSize": pageSize,
+	})
+}
