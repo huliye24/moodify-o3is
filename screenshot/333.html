@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moodify - AI 歌词创作界面</title>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --accent-color: #76E4CE;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* 背景图建议替换为你图中的北极光深海背景 */
+            background: radial-gradient(circle at top right, #1e3a3a, #0d1117), 
+                        url('https://images.unsplash.com/photo-1531306728370-e2eba9bd7bb1?auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-blend-mode: overlay;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* 主容器：玻璃拟态卡片 */
+        .main-card {
+            width: 900px;
+            height: 560px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px) saturate(150%);
+            -webkit-backdrop-filter: blur(25px) saturate(150%);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 标题部分 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-size: 42px;
+            margin: 0;
+            font-family: "Times New Roman", serif;
+            letter-spacing: 2px;
+            background: linear-gradient(to bottom, #fff, #76E4CE);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo p {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        /* 导航栏 */
+        nav {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        nav span {
+            padding: 8px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        nav .active {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.2);
+        }
+
+        /* 布局网格 */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1.8fr 1fr;
+            gap: 25px;
+            flex-grow: 1;
+        }
+
+        .editor-box, .list-box {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            padding: 20px;
+        }
+
+        h3 { font-size: 18px; margin-bottom: 20px; font-weight: 400; }
+
+        /* 编辑区文本 */
+        .lyrics-content {
+            font-size: 18px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .ai-tip {
+            margin-top: 30px;
+            font-size: 14px;
+            color: var(--accent-color);
+            background: rgba(118, 228, 206, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        /* 列表项 */
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        /* 底部操作区 */
+        footer {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .options { display: flex; gap: 20px; }
+        .options span { font-size: 14px; cursor: pointer; display: flex; align-items: center; }
+        .options span::before { content: '○'; margin-right: 8px; }
+
+        .btn-confirm {
+            background: linear-gradient(90deg, #1A2A6C, #76E4CE);
+            padding: 12px 35px;
+            border-radius: 25px;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(118, 228, 206, 0.3);
+            transition: 0.3s;
+        }
+
+        .btn-confirm:hover { transform: scale(1.05); box-shadow: 0 15px 30px rgba(118, 228, 206, 0.5); }
+    </style>
+</head>
+<body>
+
+<div class="main-card">
+    <header>
+        <div class="logo">
+            <h1>Moodify</h1>
+            <p>AI 词曲灵感</p>
+        </div>
+        <nav>
+            <span class="active">首页</span>
+            <span>主题</span>
+            <span>模板</span>
+            <span>设计图</span>
+        </nav>
+    </header>
+
+    <div class="content-grid">
+        <div class="editor-box">
+            <h3>我的歌词</h3>
+            <div class="lyrics-content">
+                当星辰坠落入海<br>
+                我们在光影中徘徊... |
+            </div>
+            <div class="ai-tip">
+                ✨ AI 建议：将"徘徊"改为"交融"，情感表达更深沉。
+            </div>
+        </div>
+        <div class="list-box">
+            <h3>灵感清单</h3>
+            <div class="list-item"><span>1. 梦幻之海</span> <span>〉</span></div>
+            <div class="list-item"><span>2. 时空重叠</span> <span>⊕</span></div>
+            <div class="list-item"><span>3. 永恒的寂静</span> <span>⊕</span></div>
+            <div class="list-item"><span>4. 禧播向章</span> <span>⊕</span></div>
+            <div class="list-item"><span>5. 日夜真的</span> <span>⊕</span></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="options">
+            <span>设置偏好</span>
+            <span>选定词组</span>
+        </div>
+        <button class="btn-confirm">确认灵感 (✨)</button>
+    </footer>
+</div>
+
+</body>
+</html>

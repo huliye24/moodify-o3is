@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Moodify Local - 本地音乐管理</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --glass-deep: rgba(10, 15, 25, 0.8);
+            --glass-light: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #76E4CE;
+            --danger: #ff5f56;
+            --text-main: #e2e8f0;
+            --text-dim: #94a3b8;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background: #020617 url('https://images.unsplash.com/photo-1464802686167-b939a67e0b24?q=80&w=1920') center/cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', system-ui, sans-serif;
+            color: var(--text-main);
+        }
+
+        /* 主容器布局 */
+        .app-window {
+            width: 1200px;
+            height: 780px;
+            background: var(--glass-deep);
+            backdrop-filter: blur(40px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            display: grid;
+            grid-template-areas: 
+                "header header header"
+                "sidebar folders main info"
+                "player player player player";
+            grid-template-columns: 180px 180px 1fr 260px;
+            grid-template-rows: 60px 1fr 100px;
+            overflow: hidden;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+        }
+
+        /* 顶部工具栏 */
+        header {
+            grid-area: header;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 20px;
+        }
+
+        .search-bar {
+            background: var(--glass-light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 12px;
+            flex-grow: 1;
+            max-width: 400px;
+            font-size: 13px;
+        }
+
+        .tool-btn {
+            background: var(--glass-light);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* 列表区域 */
+        .main-list {
+            grid-area: main;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            text-align: left;
+            color: var(--text-dim);
+            font-weight: 500;
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+
+        tr:hover { background: var(--glass-light); }
+        .active-row { color: var(--accent); background: rgba(118, 228, 206, 0.05); }
+
+        /* 右侧编辑器面板 */
+        .info-panel {
+            grid-area: info;
+            border-left: 1px solid var(--border);
+            padding: 20px;
+            background: rgba(0,0,0,0.1);
+        }
+
+        .album-art-big {
+            width: 100%;
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .field-label { font-size: 11px; color: var(--text-dim); margin-top: 15px; }
+        .field-input { 
+            background: transparent; 
+            border: none; 
+            border-bottom: 1px solid var(--border);
+            color: white;
+            width: 100%;
+            padding: 5px 0;
+            font-size: 14px;
+        }
+
+        /* 播放器底部 */
+        footer {
+            grid-area: player;
+            background: rgba(0,0,0,0.4);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .mini-info { width: 200px; display: flex; align-items: center; gap: 15px; }
+        .playback-ctrl { flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .progress-rail { width: 500px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; position: relative; }
+        .progress-fill { width: 45%; height: 100%; background: var(--accent); border-radius: 2px; box-shadow: 0 0 10px var(--accent); }
+
+        /* 侧边栏 */
+        .sidebar-nav { grid-area: sidebar; border-right: 1px solid var(--border); padding: 20px; }
+        .folders-nav { grid-area: folders; border-right: 1px solid var(--border); padding: 20px; background: rgba(0,0,0,0.1); }
+        .nav-group { margin-bottom: 30px; }
+        .nav-link { 
+            display: flex; align-items: center; gap: 10px; padding: 8px; 
+            font-size: 13px; color: var(--text-dim); text-decoration: none; border-radius: 6px;
+        }
+        .nav-link.active { background: var(--glass-light); color: white; }
+
+        .tag-flac { color: #ffd700; font-size: 10px; border: 1px solid #ffd700; padding: 1px 4px; border-radius: 3px; margin-left: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="app-window">
+    <header>
+        <div style="font-weight: bold; width: 160px;">Moodify Local</div>
+        <input type="text" class="search-bar" placeholder="搜索本地音乐库...">
+        <button class="tool-btn"><i data-lucide="plus"></i> 添加目录</button>
+        <button class="tool-btn"><i data-lucide="refresh-cw"></i> 扫描更改</button>
+        <button class="tool-btn" style="color: var(--danger);"><i data-lucide="trash-2"></i> 删除选中项</button>
+    </header>
+
+    <aside class="sidebar-nav">
+        <div class="nav-group">
+            <div class="field-label" style="margin-bottom:10px">LIBRARY</div>
+            <a href="#" class="nav-link"><i data-lucide="home"></i> Home</a>
+            <a href="#" class="nav-link"><i data-lucide="users"></i> Artists</a>
+            <a href="#" class="nav-link active"><i data-lucide="folder"></i> Folders</a>
+            <a href="#" class="nav-link"><i data-lucide="music"></i> Songs</a>
+        </div>
+    </aside>
+
+    <aside class="folders-nav">
+        <div class="field-label" style="margin-bottom:10px">FOLDER VIEW</div>
+        <div class="nav-link" style="color:var(--accent)">/Users/Music/FLAC</div>
+        <div class="nav-link">/Users/Music/iTunes</div>
+        <div class="nav-link">/External/Archive</div>
+    </aside>
+
+    <main class="main-list">
+        <table>
+            <thead>
+                <tr>
+                    <th>标题</th>
+                    <th>艺术家</th>
+                    <th>专辑</th>
+                    <th>时长</th>
+                    <th>格式</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="active-row">
+                    <td>Starfish Drift <span class="tag-flac">FLAC</span></td>
+                    <td>Coral Currents</td>
+                    <td>Oceanic Whispers</td>
+                    <td>5:12</td>
+                    <td>24bit/96kHz</td>
+                </tr>
+                <tr>
+                    <td>Sunken Echoes</td>
+                    <td>Echo Deep</td>
+                    <td>Oceanic Whispers</td>
+                    <td>3:45</td>
+                    <td>MP3</td>
+                </tr>
+                <tr>
+                    <td>Midnight Tides</td>
+                    <td>Lunar Waves</td>
+                    <td>After Dark</td>
+                    <td>4:20</td>
+                    <td>FLAC</td>
+                </tr>
+                </tbody>
+        </table>
+    </main>
+
+    <aside class="info-panel">
+        <div class="album-art-big">
+            <i data-lucide="music" size="48" color="rgba(255,255,255,0.2)"></i>
+        </div>
+        <div style="font-size: 16px; font-weight: bold;">Metadata Editor</div>
+        
+        <div class="field-label">TITLE</div>
+        <input type="text" class="field-input" value="Starfish Drift">
+        
+        <div class="field-label">ARTIST</div>
+        <input type="text" class="field-input" value="Coral Currents">
+        
+        <div class="field-label">ALBUM</div>
+        <input type="text" class="field-input" value="Oceanic Whispers">
+
+        <button class="tool-btn" style="width:100%; justify-content:center; margin-top:30px; background: var(--accent); color: #000;">
+            保存修改
+        </button>
+    </aside>
+
+    <footer>
+        <div class="mini-info">
+            <div style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:8px"></div>
+            <div>
+                <div style="font-size:14px">Starfish Drift</div>
+                <div style="font-size:11px; opacity:0.5">Coral Currents</div>
+            </div>
+        </div>
+        
+        <div class="playback-ctrl">
+            <div style="display:flex; gap:30px; align-items:center">
+                <i data-lucide="skip-back" size="18"></i>
+                <i data-lucide="pause" size="28" style="background:white; color:black; border-radius:50%; padding:5px"></i>
+                <i data-lucide="skip-forward" size="18"></i>
+            </div>
+            <div class="progress-rail"><div class="progress-fill"></div></div>
+        </div>
+
+        <div style="width:200px; display:flex; justify-content:flex-end; gap:15px">
+            <i data-lucide="volume-2" size="18"></i>
+            <i data-lucide="maximize-2" size="18"></i>
+        </div>
+    </footer>
+</div>
+
+<script>
+    // 初始化图标
+    lucide.createIcons();
+</script>
+
+</body>
+</html>

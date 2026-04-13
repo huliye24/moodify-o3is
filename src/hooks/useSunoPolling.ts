@@ -32,45 +32,56 @@ export function useSunoPolling() {
       if (task.status === 'success') {
         stopGenerating()
 
-        // 获取关联的 MusicTrack 并更新
-        const tracks = await window.api.musicTrack.getByTaskId(taskId)
-        if (tracks.length > 0) {
-          // 更新 MusicTrack 的 URL 信息
-          for (const song of task.songs) {
-            const existingTrack = tracks.find(t => !t.audioUrl)
-            if (existingTrack) {
-              await window.api.musicTrack.update(existingTrack.id, {
-                status: 'success',
-                audioUrl: song.audio_url,
-                videoUrl: song.video_url,
-                coverImageUrl: song.image_url,
-                sunoSongId: song.id,
-                title: song.title || existingTrack.title
-              })
-            }
+        // 通过 HTTP 代理查询 MusicTrack 并更新
+        try {
+          const tracksRes = await window.api.http.get(`/api/v1/music-tracks/by-task?task_id=${taskId}`)
+          const tracks = Array.isArray(tracksRes) ? tracksRes : (tracksRes.data || [])
 
-            // 添加到播放列表
-            const updatedTrack = await window.api.musicTrack.getByTaskId(taskId)
-            if (updatedTrack.length > 0) {
-              const newTrack = updatedTrack.find(t => t.audioUrl)
+          if (tracks.length > 0) {
+            for (const song of task.songs) {
+              const existingTrack = tracks.find((t: any) => !t.audio_url)
+
+              if (existingTrack) {
+                await window.api.http.post('/api/v1/music-tracks', {
+                  id: existingTrack.id,
+                  status: 'success',
+                  audio_url: song.audio_url,
+                  video_url: song.video_url,
+                  cover_image_url: song.image_url,
+                  suno_song_id: song.id,
+                  title: song.title || existingTrack.title
+                })
+              }
+
+              // 重新获取更新后的 track
+              const updatedRes = await window.api.http.get(`/api/v1/music-tracks/by-task?task_id=${taskId}`)
+              const updatedTracks = Array.isArray(updatedRes) ? updatedRes : (updatedRes.data || [])
+              const newTrack = updatedTracks.find((t: any) => t.audio_url)
               if (newTrack) {
                 addToPlaylist(newTrack)
                 setCurrentTrack(newTrack)
               }
             }
           }
+        } catch (e) {
+          console.error('更新 track 失败:', e)
         }
       } else if (task.status === 'failure') {
         stopGenerating()
         setGenerationError(task.failReason || '生成失败')
 
-        // 更新数据库状态
-        const tracks = await window.api.musicTrack.getByTaskId(taskId)
-        if (tracks.length > 0) {
-          await window.api.musicTrack.update(tracks[0].id, {
-            status: 'failure',
-            failReason: task.failReason
-          })
+        try {
+          const tracksRes = await window.api.http.get(`/api/v1/music-tracks/by-task?task_id=${taskId}`)
+          const tracks = Array.isArray(tracksRes) ? tracksRes : (tracksRes.data || [])
+          if (tracks.length > 0) {
+            await window.api.http.post('/api/v1/music-tracks', {
+              id: tracks[0].id,
+              status: 'failure',
+              fail_reason: task.failReason
+            })
+          }
+        } catch (e) {
+          console.error('更新失败状态失败:', e)
         }
       }
       // 其他状态继续轮询

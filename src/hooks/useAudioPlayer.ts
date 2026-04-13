@@ -48,8 +48,8 @@ export function useAudioPlayer() {
 
   // 加载新曲目
   useEffect(() => {
-    if (audioRef.current && currentTrack?.audioUrl) {
-      audioRef.current.src = currentTrack.audioUrl
+    if (audioRef.current && currentTrack?.audio_url) {
+      audioRef.current.src = currentTrack.audio_url
       audioRef.current.load()
     }
   }, [currentTrack])
@@ -58,7 +58,7 @@ export function useAudioPlayer() {
   useEffect(() => {
     if (!audioRef.current) return
 
-    if (isPlaying && currentTrack?.audioUrl) {
+    if (isPlaying && currentTrack?.audio_url) {
       audioRef.current.play().catch(console.error)
     } else {
       audioRef.current.pause()
