@@ -1,0 +1,197 @@
+# API 契约
+
+定义 Moodify 前后端、Electron 主进程间的 API 契约。
+
+```yaml
+# contracts/api-contracts.yaml
+
+version: "v1"
+base_url: "http://localhost:8080/api/v1"
+
+endpoints:
+  # 项目管理
+  projects:
+    list:
+      method: GET
+      path: "/projects"
+      response: "Project[]"
+
+    create:
+      method: POST
+      path: "/projects"
+      request: "CreateProjectRequest"
+      response: "Project"
+
+    update:
+      method: PUT
+      path: "/projects/:id"
+      request: "UpdateProjectRequest"
+      response: "Project"
+
+    delete:
+      method: DELETE
+      path: "/projects/:id"
+      response: "SuccessResponse"
+
+  # 歌词生成 (O3ics)
+  o3ics:
+    generate:
+      method: POST
+      path: "/o3ics/generate"
+      request: "GenerateRequest"
+      response: "GenerateResponse"
+      timeout_seconds: 60
+
+    list:
+      method: GET
+      path: "/o3ics"
+      query: "project_id, limit, offset"
+      response: "O3icsListResponse"
+
+    favorite:
+      method: POST
+      path: "/o3ics/:id/favorite"
+      request: "ToggleFavoriteRequest"
+      response: "O3ics"
+
+  # 规则引擎
+  rules:
+    list:
+      method: GET
+      path: "/rules"
+      query: "type, is_active"
+      response: "Rule[]"
+
+    create:
+      method: POST
+      path: "/rules"
+      request: "CreateRuleRequest"
+      response: "Rule"
+
+    import:
+      method: POST
+      path: "/rules/import"
+      request: "ImportRulesRequest"
+      response: "Rule[]"
+
+    export:
+      method: GET
+      path: "/rules/export/:id"
+      response: "ExportRulesResponse"
+
+  # Suno 音乐生成
+  suno:
+    submit:
+      method: POST
+      path: "/suno/submit/music"
+      request: "SunoSubmitRequest"
+      response: "SunoTaskResponse"
+
+    fetch:
+      method: POST
+      path: "/suno/fetch"
+      request: "SunoFetchRequest"
+      response: "SunoFetchResponse"
+
+  # 本地音乐库
+  library:
+    scan:
+      method: POST
+      path: "/library/scan"
+      request: "ScanRequest"
+      response: "ScanResponse"
+
+    artists:
+      method: GET
+      path: "/library/artists"
+      response: "Artist[]"
+
+    albums:
+      method: GET
+      path: "/library/albums"
+      query: "artist_id"
+      response: "Album[]"
+
+    songs:
+      method: GET
+      path: "/library/songs"
+      query: "artist_id, album_id, search"
+      response: "Song[]"
+
+# 错误码定义
+error_codes:
+  400: "请求参数错误"
+  401: "未授权"
+  403: "禁止访问"
+  404: "资源不存在"
+  429: "请求过于频繁"
+  500: "服务器内部错误"
+  502: "上游服务错误（Suno/DeepSeek）"
+  503: "服务暂时不可用"
+
+# 限流规则
+rate_limits:
+  default:
+    requests_per_minute: 60
+    burst: 10
+
+  generate:
+    requests_per_minute: 10
+    burst: 2
+
+# 超时配置
+timeouts:
+  default_seconds: 30
+  generate_seconds: 60
+  suno_poll_seconds: 10
+
+# 重试策略
+retry:
+  max_attempts: 3
+  backoff: "exponential"
+  initial_delay_ms: 1000
+  max_delay_ms: 10000
+```
+
+## IPC 通道契约（Electron）
+
+```typescript
+// preload/index.ts 暴露的 API 接口
+interface WindowAPI {
+  // 项目管理
+  project: {
+    list: () => Promise<Project[]>;
+    create: (name: string) => Promise<Project>;
+    delete: (id: number) => Promise<void>;
+  };
+
+  // 歌词生成
+  o3ics: {
+    generate: (params: GenerateParams) => Promise<Lyrics>;
+    list: (projectId: number) => Promise<Lyrics[]>;
+  };
+
+  // Suno 集成
+  suno: {
+    submit: (options: SunoSubmitRequest) => Promise<SunoTaskResponse>;
+    fetch: (taskIds: string[]) => Promise<SunoTask[]>;
+  };
+
+  // 音乐播放
+  player: {
+    play: (url: string) => Promise<void>;
+    pause: () => Promise<void>;
+    setVolume: (volume: number) => Promise<void>;
+  };
+
+  // 本地文件系统
+  fs: {
+    readFile: (path: string) => Promise<Buffer>;
+    writeFile: (path: string, data: Buffer) => Promise<void>;
+  };
+}
+```
+
+---
+
+> API 契约是前后端协作的基石，变更需同步更新。

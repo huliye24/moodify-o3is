@@ -1,0 +1,60 @@
+# 事件日志
+
+此文件记录 AIP 协议执行过程中的所有重要事件。
+
+## 格式
+
+```yaml
+- timestamp: "2026-04-13T10:00:00Z"  # ISO 8601
+  task_id: "T20260413_001"
+  event_type: "task_started|task_completed|task_blocked|milestone_reached"
+  assignee: "AI Assistant|Human|Team"
+  duration_minutes: 45
+  files_touched:
+    - "src/hooks/useProject.ts"
+  notes: "简要描述"
+```
+
+## 事件类型
+
+| 类型 | 说明 |
+|------|------|
+| `task_started` | 任务开始执行 |
+| `task_completed` | 任务成功完成 |
+| `task_blocked` | 任务被阻塞 |
+| `milestone_reached` | 达成里程碑 |
+| `decision_made` | 做出决策 |
+| `protocol_updated` | 协议本身更新 |
+
+---
+
+## 事件历史
+
+### 2026-04-13
+
+```yaml
+- timestamp: 2026-04-13T10:00:00Z
+  task_id: T20260413_001
+  event_type: task_started
+  assignee: AI Assistant
+  duration_minutes: 30
+  files_touched:
+    - AIP_Protocol/0_决策/README.md
+    - AIP_Protocol/1_roadmap/README.md
+    - AIP_Protocol/2_任务/README.md
+    - AIP_Protocol/3_共享/README.md
+  notes: "创建 AIP 协议目录结构和基础 README"
+
+- timestamp: 2026-04-13T10:30:00Z
+  task_id: T20260413_001
+  event_type: task_completed
+  assignee: AI Assistant
+  duration_minutes: 30
+  files_touched:
+    - AIP_Protocol/目录结构.md
+  notes: "目录结构创建完成，所有 README 就绪"
+```
+
+---
+
+> **注意**：此文件由工具自动更新，勿手动编辑。

@@ -1,0 +1,100 @@
+# 性能基准契约
+
+定义 Moodify 应用的性能目标和测量方法。
+
+```yaml
+# contracts/performance.yaml
+
+version: "1.0.0"
+description: "Moodify 性能基准与目标"
+
+targets:
+  # 启动性能
+  startup:
+    cold_start:
+      target_ms: 3000
+      measurement: "从双击图标到主窗口可交互"
+      method: "performance.timing"
+    hot_reload:
+      target_ms: 100
+      measurement: "HMR 更新到 UI 刷新"
+
+  # API 性能
+  api:
+    p50_response_ms: 100
+    p95_response_ms: 150
+    p99_response_ms: 200
+    measurement: "从请求发出到收到响应"
+
+  # 渲染性能
+  rendering:
+    frames_per_second: 60
+    jank_threshold_ms: 16
+    measurement: "动画与滚动帧率"
+
+  # 内存占用
+  memory:
+    idle_peak_mb: 300
+    playing_peak_mb: 500
+    measurement: "Chrome 任务管理器"
+
+  # 磁盘占用
+  disk:
+    app_size_mb: 150
+    max_cache_size_mb: 500
+    data_dir_limit_gb: 5
+
+  # 电池影响（笔记本）
+  battery:
+    background_power_ma: 50
+    playing_power_ma: 150
+    measurement: "Windows 电池报告"
+
+# 测量工具
+measurement_tools:
+  - "Chrome DevTools Performance"
+  - "Windows Performance Monitor"
+  - "Electron built-in profiler"
+
+# 监控告警
+alerts:
+  - if: "startup.cold_start > 5000"
+    severity: "critical"
+    action: "阻塞发布"
+
+  - if: "api.p99_response_ms > 500"
+    severity: "warning"
+    action: "需优化"
+
+  - if: "memory.idle_peak_mb > 500"
+    severity: "warning"
+    action: "检查内存泄漏"
+```
+
+## 性能测试用例
+
+### 用例 1：应用启动
+
+```bash
+# 测量冷启动时间
+npx electron . --profile-startup
+# 在控制台查看 timing
+```
+
+### 用例 2：歌词生成
+
+```bash
+# 测量 API 响应时间
+curl -w "@curl-format.txt" -o /dev/null -s http://localhost:8080/api/v1/o3ics/generate
+```
+
+### 用例 3：音频播放
+
+```bash
+# 监控内存使用
+# 在 DevTools Memory 面板记录堆快照
+```
+
+---
+
+> 性能目标是质量门禁，不达标不能发布。
