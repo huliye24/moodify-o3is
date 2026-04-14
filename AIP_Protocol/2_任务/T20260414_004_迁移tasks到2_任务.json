@@ -1,0 +1,32 @@
+{
+  "task_id": "T20260414_004",
+  "title": "迁移 tasks/ 到 2_任务/",
+  "description": "将 tasks/ 目录下的所有任务文档迁移到 AIP_Protocol/2_任务/，包括 README.md、phase* 子目录、日志文件和架构报告。",
+  "type": "feature",
+  "tech_node": "R0",
+  "priority": "P0",
+  "status": "completed",
+  "created_at": "2026-04-14T11:05:00Z",
+  "completed_at": "2026-04-14T11:20:00Z",
+  "assignee": "AI Assistant",
+  "preconditions": ["T20260413_001"],
+  "postconditions": [],
+  "acceptance_criteria": [
+    "AIP_Protocol/2_任务/ 目录结构完整",
+    "所有任务文档已迁移",
+    "任务索引 INDEX.md 已生成"
+  ],
+  "dependencies": [],
+  "files_modified": [
+    "AIP_Protocol/2_任务/README.md",
+    "AIP_Protocol/2_任务/phase1-README.md",
+    "AIP_Protocol/2_任务/phase2-README.md",
+    "AIP_Protocol/2_任务/phase3-README.md",
+    "AIP_Protocol/2_任务/phase4-README.md",
+    "AIP_Protocol/2_任务/phase5-README.md",
+    "AIP_Protocol/2_任务/logs-README.md",
+    "AIP_Protocol/2_任务/12h-architecture-design-report.md",
+    "AIP_Protocol/2_任务/INDEX.md"
+  ],
+  "notes": "任务已完成：\n1. 迁移 tasks/README.md 到 AIP_Protocol/2_任务/tasks-README.md\n2. 迁移 phase1-5/README.md 到对应的 phase*-README.md\n3. 迁移 logs/README.md 到 AIP_Protocol/2_任务/logs-README.md\n4. 迁移 12h-architecture-design-report.md\n5. 创建 AIP_Protocol/2_任务/INDEX.md 任务索引\n6. 所有任务文档已按照 AIP 协议结构组织完成"
+}
