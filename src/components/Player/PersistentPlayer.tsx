@@ -354,14 +354,14 @@ export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerP
         <div className="flex items-center gap-1">
           <button
             onClick={skipPrev}
-            className="p-2 text-gray-500 hover:text-gray-800 transition-all duration-300 hover:scale-110"
+            className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 hover:text-gray-800 transition-all duration-300 hover:scale-110"
           >
             <SkipBack className="w-4 h-4" />
           </button>
 
           <button
             onClick={togglePlay}
-            className="p-3 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 transition-all duration-300 hover:scale-105 shadow-lg text-white"
+            className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 transition-all duration-300 hover:scale-105 shadow-lg text-white"
           >
             {isPlaying ? (
               <Pause className="w-5 h-5" />
