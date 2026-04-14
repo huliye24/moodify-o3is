@@ -1,0 +1,126 @@
+/* =========================================
+   Moodify - Global Styles v2.0
+   统一设计系统 - 情绪潮汐色谱
+   ========================================= */
+
+:root {
+  /* 情绪色谱 - 4阶段渐变 */
+  --color-coil: var(--theme-coil-color, #a86050);
+  --color-lost: var(--theme-lost-color, #d4a574);
+  --color-awaken: var(--theme-awaken-color, #e8b86c);
+  --color-expand: var(--theme-expand-color, #d8c8b8);
+
+  /* 基础色板 */
+  --bg-dark: var(--theme-bg-base, #f0ede8);
+  --bg-deep: var(--theme-bg-surface, #e5dfd8);
+  --bg-surface: var(--theme-bg-elevated, #f7f4f0);
+  --text-primary: var(--theme-text-primary, #3d2d2d);
+  --text-secondary: var(--theme-text-secondary, #5d4d4d);
+  --text-muted: var(--theme-text-muted, #8d7d7d);
+
+  /* 玻璃质感 */
+  --surface-glass: rgba(255, 255, 255, 0.6);
+  --surface-glass-hover: rgba(255, 255, 255, 0.8);
+  --glow-soft: rgba(168, 104, 80, 0.2);
+
+  /* 渐变 */
+  --gradient-tidal: linear-gradient(180deg, #a86850 0%, #d4a574 50%, #d8c8b8 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(168, 104, 80, 0.08) 0%, rgba(232, 184, 108, 0.05) 100%);
+  --gradient-hero: radial-gradient(ellipse at 50% 30%, rgba(168, 104, 80, 0.1) 0%, transparent 50%);
+
+  /* 字体 */
+  --font-display: 'Noto Serif SC', 'Cormorant Garamond', Georgia, serif;
+  --font-english: 'Cormorant Garamond', Georgia, serif;
+
+  /* 间距 */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 2rem;
+  --space-lg: 4rem;
+  --space-xl: 8rem;
+
+  /* 有机缓动曲线 */
+  --ease-organic: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-breathe-in: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-breathe-out: cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* 全局重置 */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  line-height: 1.8;
+  overflow-x: hidden;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(168, 104, 80, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 104, 80, 0.4);
+}
+
+/* 通用工具类 */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 淡入动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

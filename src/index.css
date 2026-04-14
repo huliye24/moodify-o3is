@@ -21,257 +21,111 @@
     font-family: 'Inter', 'Microsoft YaHei', 'PingFang SC', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background: #080e0a;
-    color: #C8F0D2;
+    background: var(--theme-bg-base, #f0ede8);
+    color: var(--theme-text-primary, #3d2d2d);
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  /* 滚动条 - 绿色极光风格 */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: rgba(8,14,10,0.5);
+    background: var(--theme-bg-surface, #e5dfd8);
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(93,185,122,0.3);
+    background: var(--theme-accent, #a86850);
     border-radius: 3px;
+    opacity: 0.3;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(93,185,122,0.5);
+    opacity: 0.5;
   }
 
-  /* 文本选择 */
   ::selection {
-    background: rgba(93,185,122,0.3);
-    color: #C8F0D2;
+    background: var(--theme-accent, #a86850);
+    opacity: 0.3;
   }
 
-  /* 焦点样式 */
   :focus-visible {
-    outline: 1px solid rgba(93,185,122,0.5);
+    outline: 1px solid var(--theme-accent, #a86850);
     outline-offset: 2px;
+    opacity: 0.5;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
-    background: rgba(45,90,61,0.35);
-    border: 1px solid rgba(93,185,122,0.35);
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    background: var(--theme-accent, #a86850);
+    color: var(--theme-bg-base, #f0ede8);
+    border: 1px solid var(--theme-border, rgba(61, 45, 45, 0.1));
   }
   .btn-primary:hover:not(:disabled) {
-    background: rgba(45,90,61,0.45);
-    border-color: rgba(93,185,122,0.5);
-    box-shadow: 0 0 16px rgba(93,185,122,0.2);
+    opacity: 0.9;
   }
 
   .btn-secondary {
-    @apply text-gray-200 px-4 py-2 rounded-lg font-medium transition-all duration-200;
-    background: rgba(45,90,61,0.12);
-    border: 1px solid rgba(93,185,122,0.18);
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+    background: var(--theme-bg-surface, #e5dfd8);
+    color: var(--theme-text-primary, #3d2d2d);
+    border: 1px solid var(--theme-border, rgba(61, 45, 45, 0.1));
   }
   .btn-secondary:hover:not(:disabled) {
-    background: rgba(45,90,61,0.2);
-    border-color: rgba(93,185,122,0.28);
+    background: var(--theme-bg-elevated, #f7f4f0);
   }
 
   .input-field {
     @apply w-full rounded-lg px-4 py-3 transition-colors;
-    background: rgba(45,90,61,0.06);
-    border: 1px solid rgba(93,185,122,0.15);
-    color: rgba(200,240,210,0.85);
+    background: var(--theme-bg-surface, #e5dfd8);
+    border: 1px solid var(--theme-border, rgba(61, 45, 45, 0.1));
+    color: var(--theme-text-primary, #3d2d2d);
     font-size: 0.875rem;
   }
   .input-field::placeholder {
-    color: rgba(93,185,122,0.45);
+    color: var(--theme-text-muted, #8d7d7d);
   }
   .input-field:focus {
     outline: none;
-    border-color: rgba(93,185,122,0.4);
-    box-shadow: 0 0 0 2px rgba(93,185,122,0.1);
+    border-color: var(--theme-accent, #a86850);
   }
 
   .card {
-    background: rgba(45,90,61,0.05);
-    border: 1px solid rgba(93,185,122,0.12);
+    background: var(--theme-bg-elevated, #f7f4f0);
+    border: 1px solid var(--theme-border, rgba(61, 45, 45, 0.1));
     border-radius: 0.75rem;
     padding: 1rem;
   }
 }
 
-/* =========================================
-   Moodify 迷雾动画
-   ========================================= */
-.fog-layer {
-  background: linear-gradient(180deg,
-    rgba(107,122,143,0.03) 0%,
-    rgba(107,122,143,0.08) 50%,
-    rgba(107,122,143,0.03) 100%);
-}
-
-.fog-1 {
-  animation: fogDrift1 20s ease-in-out infinite;
-}
-.fog-2 {
-  animation: fogDrift2 25s ease-in-out infinite reverse;
-}
-.fog-3 {
-  animation: fogDrift3 30s ease-in-out infinite;
-}
-
-@keyframes fogDrift1 {
-  0%, 100% { transform: translateX(0) translateY(0); }
-  50% { transform: translateX(30px) translateY(-20px); }
-}
-@keyframes fogDrift2 {
-  0%, 100% { transform: translateX(0) translateY(0); }
-  50% { transform: translateX(-20px) translateY(15px); }
-}
-@keyframes fogDrift3 {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(15px); }
-}
-
-/* =========================================
-   Moodify 波浪动画
-   ========================================= */
-.tidal-wave {
-  animation: waveMove 3s ease-in-out infinite;
-  transform-origin: center;
-}
-
-@keyframes waveMove {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(8px); }
-}
-
-/* =========================================
-   Moodify 浮动粒子
-   ========================================= */
-.particle {
-  animation: floatParticle 8s ease-in-out infinite;
-}
-
-@keyframes floatParticle {
-  0%, 100% {
-    transform: translateY(0) translateX(0);
-    opacity: 0.3;
-  }
-  50% {
-    transform: translateY(-30px) translateX(10px);
-    opacity: 0.6;
-  }
-}
-
-/* =========================================
-   Moodify Tab 指示器发光
-   ========================================= */
-.tab-glow {
-  box-shadow: 0 0 20px rgba(107, 122, 143, 0.3);
-}
-
-/* =========================================
-   Moodify 播放器专属
-   ========================================= */
-.player-enter {
-  animation: playerSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-@keyframes playerSlideIn {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* =========================================
-   Moodify 封面旋转动画
-   ========================================= */
-.cover-spin {
-  animation: coverRotate 20s linear infinite;
-}
-
-@keyframes coverRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* =========================================
-   Moodify 渐入动画
-   ========================================= */
-.fade-in-up {
-  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* =========================================
-   情绪卡片光晕
-   ========================================= */
-.mood-glow-coil {
-  box-shadow: 0 0 30px rgba(107,122,143,0.3), 0 0 60px rgba(107,122,143,0.15);
-}
-.mood-glow-lost {
-  box-shadow: 0 0 30px rgba(122,138,159,0.3), 0 0 60px rgba(122,138,159,0.15);
-}
-.mood-glow-awaken {
-  box-shadow: 0 0 30px rgba(168,184,201,0.3), 0 0 60px rgba(168,184,201,0.15);
-}
-.mood-glow-expand {
-  box-shadow: 0 0 30px rgba(196,212,228,0.3), 0 0 60px rgba(196,212,228,0.15);
-}
-
-/* =========================================
-   Moodify 噪声叠加层
-   ========================================= */
 .noise-overlay {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.02;
+  opacity: 0.015;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
 
-/* =========================================
-   滚动入场动画（Intersection Observer 驱动）
-   ========================================= */
 .scroll-section {
   opacity: 0;
   transform: translateY(30px);
-  transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-              transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.7s, transform 0.7s;
 }
-
 .scroll-section.is-visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* Staggered 子元素延迟 */
-.scroll-section .stagger-1 { transition-delay: 0.1s; }
-.scroll-section .stagger-2 { transition-delay: 0.2s; }
-.scroll-section .stagger-3 { transition-delay: 0.3s; }
-.scroll-section .stagger-4 { transition-delay: 0.4s; }
-.scroll-section .stagger-5 { transition-delay: 0.5s; }
-
-/* =========================================
-   情绪说明面板 hover 高亮
-   ========================================= */
-.mood-card-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+.mood-glow-coil {
+  box-shadow: 0 0 30px var(--theme-coil-color, rgba(168, 104, 80, 0.3));
+}
+.mood-glow-lost {
+  box-shadow: 0 0 30px var(--theme-lost-color, rgba(212, 165, 116, 0.3));
+}
+.mood-glow-awaken {
+  box-shadow: 0 0 30px var(--theme-awaken-color, rgba(232, 184, 108, 0.3));
+}
+.mood-glow-expand {
+  box-shadow: 0 0 30px var(--theme-expand-color, rgba(216, 200, 184, 0.3));
 }

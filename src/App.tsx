@@ -1,84 +1,53 @@
-import { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useStore } from './stores/useStore'
-import Sidebar from './components/Sidebar'
-import SettingsModal from './components/SettingsModal'
-import RulesModal from './components/RulesModal'
-import AppTabLayout, { TabId } from './components/AppTabLayout'
-import LyricsPage from './pages/LyricsPage'
-import MoodPage from './pages/MoodPage'
-import BrandPage from './pages/BrandPage'
-import LibraryPage from './pages/LibraryPage'
-import MoodPlayer from './components/MoodPlayer'
-import { useMoodStore } from './stores/useMoodStore'
-import { AuroraThemeProvider } from './context/ThemeContext'
 
-export default function App() {
-  const { showSettings, showRules, setShowSettings, setShowRules } = useStore()
-  const [activeTab, setActiveTab] = useState<TabId>('o3ics')
+// Layouts
+import MarketingLayout from './components/layouts/MarketingLayout'
+import AppLayout from './components/layouts/AppLayout'
 
-  const { audio } = useMoodStore()
+// Components
+import PersistentPlayer from './components/Player/PersistentPlayer'
 
-  // 键盘快捷键
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
-      if (activeTab === 'mood') {
-        switch (e.code) {
-          case 'Space':
-            e.preventDefault()
-            useMoodStore.getState().togglePlay()
-            break
-          case 'ArrowLeft':
-            if (audio) audio.currentTime = Math.max(0, audio.currentTime - 5)
-            break
-          case 'ArrowRight':
-            if (audio && useMoodStore.getState().duration > 0)
-              audio.currentTime = Math.min(useMoodStore.getState().duration, audio.currentTime + 5)
-            break
-          case 'Digit1': useMoodStore.getState().loadTrack(0); break
-          case 'Digit2': useMoodStore.getState().loadTrack(1); break
-          case 'Digit3': useMoodStore.getState().loadTrack(2); break
-          case 'Digit4': useMoodStore.getState().loadTrack(3); break
-        }
-      }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [activeTab, audio])
+// Marketing Pages
+import TidalHome from './components/pages/TidalHome'
+// import BoundaryPage from './components/pages/BoundaryPage'
+import ProductsPage from './components/pages/ProductsPage'
+import VoicePage from './components/pages/VoicePage'
+import PlayerPage from './components/pages/PlayerPage'
 
+function App() {
   return (
-    <AuroraThemeProvider>
-    <div className="h-full flex flex-col bg-moodify-bg overflow-hidden">
-      {/* 噪声纹理叠加 */}
-      <div className="noise-overlay" />
+    <BrowserRouter>
+      <Routes>
+        {/* Player Tab - Full screen dashboard */}
+        <Route path="/player" element={<PlayerPage />} />
 
-      {/* 顶部 Tab 导航 */}
-      <AppTabLayout activeTab={activeTab} onTabChange={setActiveTab}>
-        {(tab) => (
+        {/* App Pages - With bottom player bar */}
+        <Route path="/app" element={
           <>
-            {tab === 'o3ics' && (
-              <div className="flex flex-1 overflow-hidden">
-                <Sidebar
-                  onOpenSettings={() => setShowSettings(true)}
-                  onOpenRules={() => setShowRules(true)}
-                />
-                <LyricsPage />
-              </div>
-            )}
-            {tab === 'mood' && <MoodPage />}
-            {tab === 'library' && <LibraryPage />}
-            {tab === 'brand' && <BrandPage />}
+            <AppLayout />
+            <PersistentPlayer mode="minimal" />
           </>
-        )}
-      </AppTabLayout>
+        } />
 
-      {/* 情绪播放器（始终固定在底部） */}
-      <MoodPlayer />
+        {/* Marketing Pages - With bottom player bar */}
+        <Route path="/" element={
+          <>
+            <MarketingLayout />
+            <PersistentPlayer mode="minimal" />
+          </>
+        }>
+          <Route index element={<TidalHome />} />
+          {/* <Route path="boundary" element={<BoundaryPage />} /> */}
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="voice" element={<VoicePage />} />
+        </Route>
 
-      {/* 全局弹窗 */}
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-      {showRules && <RulesModal onClose={() => setShowRules(false)} />}
-    </div>
-    </AuroraThemeProvider>
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
+
+export default App
