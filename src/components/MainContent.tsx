@@ -14,6 +14,7 @@ import {
   History,
   Wand2
 } from 'lucide-react'
+import { useAuroraTheme } from '../context/ThemeContext'
 
 const EMOTIONS = ['悲伤', '喜悦', '浪漫', '励志', '平静', '愤怒', '迷茫', '感恩']
 const THEMES = ['爱情', '友情', '成长', '自然', '生活', '梦想', '回忆', '未来']
@@ -21,16 +22,9 @@ const STYLES = ['流行', '古风', '民谣', '说唱', '情歌', '摇滚', '电
 const RHYMES = ['AABB', 'ABAB', '自由韵', 'AAAA', 'ABBA']
 const LENGTHS = ['短歌 (16句)', '中等 (24句)', '长歌 (32句+)']
 
-// 统一的 Moodify 文字色
-const T = {
-  secondary: 'rgba(107,122,143,0.5)',   // 次要文字（标签、描述）
-  tertiary:   'rgba(107,122,143,0.35)', // 占位符、序号
-  body:       'rgba(196,212,228,0.75)', // 正文
-  heading:    'rgba(196,212,228,0.9)',  // 标题
-  white:      'rgba(196,212,228,1)',    // 纯白
-}
-
 export default function MainContent() {
+  const { theme } = useAuroraTheme()
+  const T = theme.text
   const {
     currentProject,
     o3icsList,
@@ -109,8 +103,8 @@ export default function MainContent() {
 
             {/* 输入文案卡片 */}
             <div className="card">
-              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: T.heading }}>
-                <FileText className="w-5 h-5" style={{ color: 'rgba(107,122,143,0.7)' }} />
+                <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: theme.text.heading }}>
+                <FileText className="w-5 h-5" style={{ color: theme.text.secondary }} />
                 输入文案
               </h2>
               <textarea
@@ -128,12 +122,12 @@ export default function MainContent() {
                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', color: T.heading }}
               >
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Sparkles className="w-5 h-5" style={{ color: 'rgba(107,122,143,0.7)' }} />
+                  <Sparkles className="w-5 h-5" style={{ color: theme.text.secondary }} />
                   生成参数
                 </span>
                 <ChevronDown
                   className={`w-5 h-5 transition-transform ${showOptions && 'rotate-180'}`}
-                  style={{ color: T.secondary, transition: 'transform 0.2s' }}
+                  style={{ color: theme.text.secondary, transition: 'transform 0.2s' }}
                 />
               </button>
 
@@ -141,7 +135,7 @@ export default function MainContent() {
 
                 {/* 情感基调 */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', color: T.secondary, marginBottom: '0.5rem' }}>情感基调</label>
+                  <label style={{ display: 'block', fontSize: '0.875rem', color: theme.text.secondary, marginBottom: '0.5rem' }}>情感基调</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                     {EMOTIONS.map((emotion) => (
                       <button
@@ -153,20 +147,20 @@ export default function MainContent() {
                           fontSize: '0.875rem',
                           transition: 'all 0.2s',
                           ...(selectedEmotion === emotion
-                            ? { background: 'rgba(107,122,143,0.2)', color: T.white, border: '1px solid rgba(107,122,143,0.4)' }
-                            : { background: 'rgba(107,122,143,0.08)', color: T.secondary, border: '1px solid rgba(107,122,143,0.15)' }
+                            ? { background: theme.chip.activeBg, color: theme.chip.activeText, border: `1px solid ${theme.chip.activeBorder}` }
+                            : { background: theme.chip.inactiveBg, color: theme.chip.inactiveText, border: `1px solid ${theme.chip.inactiveBorder}` }
                           )
                         }}
                         onMouseEnter={(e) => {
                           if (selectedEmotion !== emotion) {
-                            (e.target as HTMLElement).style.background = 'rgba(107,122,143,0.15)'
-                            ;(e.target as HTMLElement).style.color = T.body
+                            (e.target as HTMLElement).style.background = theme.chip.hoverBg
+                            ;(e.target as HTMLElement).style.color = theme.chip.hoverText
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (selectedEmotion !== emotion) {
-                            (e.target as HTMLElement).style.background = 'rgba(107,122,143,0.08)'
-                            ;(e.target as HTMLElement).style.color = T.secondary
+                            (e.target as HTMLElement).style.background = theme.chip.inactiveBg
+                            ;(e.target as HTMLElement).style.color = theme.chip.inactiveText
                           }
                         }}
                       >
@@ -178,36 +172,36 @@ export default function MainContent() {
 
                 {/* 歌曲主题 */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', color: T.secondary, marginBottom: '0.5rem' }}>歌曲主题</label>
+                  <label style={{ display: 'block', fontSize: '0.875rem', color: theme.text.secondary, marginBottom: '0.5rem' }}>歌曲主题</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    {THEMES.map((theme) => (
+                    {THEMES.map((themeItem) => (
                       <button
-                        key={theme}
-                        onClick={() => setSelectedTheme(theme)}
+                        key={themeItem}
+                        onClick={() => setSelectedTheme(themeItem)}
                         style={{
                           padding: '0.375rem 0.75rem',
                           borderRadius: '9999px',
                           fontSize: '0.875rem',
                           transition: 'all 0.2s',
-                          ...(selectedTheme === theme
-                            ? { background: 'rgba(107,122,143,0.2)', color: T.white, border: '1px solid rgba(107,122,143,0.4)' }
-                            : { background: 'rgba(107,122,143,0.08)', color: T.secondary, border: '1px solid rgba(107,122,143,0.15)' }
+                          ...(selectedTheme === themeItem
+                            ? { background: theme.chip.activeBg, color: theme.chip.activeText, border: `1px solid ${theme.chip.activeBorder}` }
+                            : { background: theme.chip.inactiveBg, color: theme.chip.inactiveText, border: `1px solid ${theme.chip.inactiveBorder}` }
                           )
                         }}
                         onMouseEnter={(e) => {
-                          if (selectedTheme !== theme) {
-                            (e.target as HTMLElement).style.background = 'rgba(107,122,143,0.15)'
-                            ;(e.target as HTMLElement).style.color = T.body
+                          if (selectedTheme !== themeItem) {
+                            (e.target as HTMLElement).style.background = theme.chip.hoverBg
+                            ;(e.target as HTMLElement).style.color = theme.chip.hoverText
                           }
                         }}
                         onMouseLeave={(e) => {
-                          if (selectedTheme !== theme) {
-                            (e.target as HTMLElement).style.background = 'rgba(107,122,143,0.08)'
-                            ;(e.target as HTMLElement).style.color = T.secondary
+                          if (selectedTheme !== themeItem) {
+                            (e.target as HTMLElement).style.background = theme.chip.inactiveBg
+                            ;(e.target as HTMLElement).style.color = theme.chip.inactiveText
                           }
                         }}
                       >
-                        {theme}
+                        {themeItem}
                       </button>
                     ))}
                   </div>
@@ -215,7 +209,7 @@ export default function MainContent() {
 
                 {/* 歌词风格 */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', color: T.secondary, marginBottom: '0.5rem' }}>歌词风格</label>
+                  <label style={{ display: 'block', fontSize: '0.875rem', color: theme.text.secondary, marginBottom: '0.5rem' }}>歌词风格</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                     {STYLES.map((style) => (
                       <button
@@ -227,20 +221,20 @@ export default function MainContent() {
                           fontSize: '0.875rem',
                           transition: 'all 0.2s',
                           ...(selectedStyle === style
-                            ? { background: 'rgba(107,122,143,0.2)', color: T.white, border: '1px solid rgba(107,122,143,0.4)' }
-                            : { background: 'rgba(107,122,143,0.08)', color: T.secondary, border: '1px solid rgba(107,122,143,0.15)' }
+                            ? { background: theme.chip.activeBg, color: theme.chip.activeText, border: `1px solid ${theme.chip.activeBorder}` }
+                            : { background: theme.chip.inactiveBg, color: theme.chip.inactiveText, border: `1px solid ${theme.chip.inactiveBorder}` }
                           )
                         }}
                         onMouseEnter={(e) => {
                           if (selectedStyle !== style) {
-                            (e.target as HTMLElement).style.background = 'rgba(107,122,143,0.15)'
-                            ;(e.target as HTMLElement).style.color = T.body
+                            (e.target as HTMLElement).style.background = theme.chip.hoverBg
+                            ;(e.target as HTMLElement).style.color = theme.chip.hoverText
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (selectedStyle !== style) {
-                            (e.target as HTMLElement).style.background = 'rgba(107,122,143,0.08)'
-                            ;(e.target as HTMLElement).style.color = T.secondary
+                            (e.target as HTMLElement).style.background = theme.chip.inactiveBg
+                            ;(e.target as HTMLElement).style.color = theme.chip.inactiveText
                           }
                         }}
                       >
@@ -252,7 +246,7 @@ export default function MainContent() {
 
                 {/* 韵律格式 */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', color: T.secondary, marginBottom: '0.5rem' }}>韵律格式</label>
+                  <label style={{ display: 'block', fontSize: '0.875rem', color: theme.text.secondary, marginBottom: '0.5rem' }}>韵律格式</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                     {RHYMES.map((rhyme) => (
                       <button
@@ -264,20 +258,20 @@ export default function MainContent() {
                           fontSize: '0.875rem',
                           transition: 'all 0.2s',
                           ...(selectedRhyme === rhyme
-                            ? { background: 'rgba(107,122,143,0.2)', color: T.white, border: '1px solid rgba(107,122,143,0.4)' }
-                            : { background: 'rgba(107,122,143,0.08)', color: T.secondary, border: '1px solid rgba(107,122,143,0.15)' }
+                            ? { background: theme.chip.activeBg, color: theme.chip.activeText, border: `1px solid ${theme.chip.activeBorder}` }
+                            : { background: theme.chip.inactiveBg, color: theme.chip.inactiveText, border: `1px solid ${theme.chip.inactiveBorder}` }
                           )
                         }}
                         onMouseEnter={(e) => {
                           if (selectedRhyme !== rhyme) {
-                            (e.target as HTMLElement).style.background = 'rgba(107,122,143,0.15)'
-                            ;(e.target as HTMLElement).style.color = T.body
+                            (e.target as HTMLElement).style.background = theme.chip.hoverBg
+                            ;(e.target as HTMLElement).style.color = theme.chip.hoverText
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (selectedRhyme !== rhyme) {
-                            (e.target as HTMLElement).style.background = 'rgba(107,122,143,0.08)'
-                            ;(e.target as HTMLElement).style.color = T.secondary
+                            (e.target as HTMLElement).style.background = theme.chip.inactiveBg
+                            ;(e.target as HTMLElement).style.color = theme.chip.inactiveText
                           }
                         }}
                       >
@@ -289,7 +283,7 @@ export default function MainContent() {
 
                 {/* 歌曲长度 */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', color: T.secondary, marginBottom: '0.5rem' }}>歌曲长度</label>
+                  <label style={{ display: 'block', fontSize: '0.875rem', color: theme.text.secondary, marginBottom: '0.5rem' }}>歌曲长度</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                     {LENGTHS.map((length) => (
                       <button
@@ -301,20 +295,20 @@ export default function MainContent() {
                           fontSize: '0.875rem',
                           transition: 'all 0.2s',
                           ...(selectedLength === length
-                            ? { background: 'rgba(107,122,143,0.2)', color: T.white, border: '1px solid rgba(107,122,143,0.4)' }
-                            : { background: 'rgba(107,122,143,0.08)', color: T.secondary, border: '1px solid rgba(107,122,143,0.15)' }
+                            ? { background: theme.chip.activeBg, color: theme.chip.activeText, border: `1px solid ${theme.chip.activeBorder}` }
+                            : { background: theme.chip.inactiveBg, color: theme.chip.inactiveText, border: `1px solid ${theme.chip.inactiveBorder}` }
                           )
                         }}
                         onMouseEnter={(e) => {
                           if (selectedLength !== length) {
-                            (e.target as HTMLElement).style.background = 'rgba(107,122,143,0.15)'
-                            ;(e.target as HTMLElement).style.color = T.body
+                            (e.target as HTMLElement).style.background = theme.chip.hoverBg
+                            ;(e.target as HTMLElement).style.color = theme.chip.hoverText
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (selectedLength !== length) {
-                            (e.target as HTMLElement).style.background = 'rgba(107,122,143,0.08)'
-                            ;(e.target as HTMLElement).style.color = T.secondary
+                            (e.target as HTMLElement).style.background = theme.chip.inactiveBg
+                            ;(e.target as HTMLElement).style.color = theme.chip.inactiveText
                           }
                         }}
                       >
@@ -335,13 +329,13 @@ export default function MainContent() {
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'rgba(107,122,143,0.7)' }} />
-                    <span style={{ color: T.body }}>生成中...</span>
+                    <Loader2 className="w-5 h-5 animate-spin" style={{ color: theme.text.secondary }} />
+                    <span style={{ color: theme.text.body }}>生成中...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-5 h-5" style={{ color: 'rgba(107,122,143,0.7)' }} />
-                    <span style={{ color: T.white }}>生成歌词</span>
+                    <Sparkles className="w-5 h-5" style={{ color: theme.text.secondary }} />
+                    <span style={{ color: theme.text.white }}>生成歌词</span>
                   </>
                 )}
               </button>
@@ -350,7 +344,7 @@ export default function MainContent() {
                 disabled={!inputContent.trim() || !currentProject}
                 className="btn-secondary flex items-center gap-2 px-6"
               >
-                <Save className="w-4 h-4" style={{ color: T.secondary }} />
+                <Save className="w-4 h-4" style={{ color: theme.text.secondary }} />
                 <span>保存</span>
               </button>
             </div>
@@ -358,8 +352,8 @@ export default function MainContent() {
             {/* Suno Prompt 建议 */}
             {selectedLyrics && selectedLyrics.sunoPrompts && selectedLyrics.sunoPrompts.length > 0 && (
               <div className="card">
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: T.heading }}>
-                  <Wand2 className="w-5 h-5" style={{ color: 'rgba(107,122,143,0.7)' }} />
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: theme.text.heading }}>
+                  <Wand2 className="w-5 h-5" style={{ color: theme.text.secondary }} />
                   Suno Prompt Suggestions
                 </h3>
                 <div className="space-y-3">
@@ -370,34 +364,34 @@ export default function MainContent() {
                         display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
                         padding: '0.75rem',
                         borderRadius: '0.5rem',
-                        background: 'rgba(107,122,143,0.08)',
-                        border: '1px solid rgba(107,122,143,0.15)',
+                        background: theme.chip.inactiveBg,
+                        border: `1px solid ${theme.border.subtle}`,
                         transition: 'border-color 0.2s',
                       }}
                       onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(107,122,143,0.35)'
+                        (e.currentTarget as HTMLElement).style.borderColor = theme.border.medium
                       }}
                       onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(107,122,143,0.15)'
+                        (e.currentTarget as HTMLElement).style.borderColor = theme.border.subtle
                       }}
                     >
                       <span style={{
                         width: '1.5rem', height: '1.5rem', borderRadius: '9999px',
-                        background: 'rgba(107,122,143,0.08)',
-                        border: '1px solid rgba(107,122,143,0.15)',
+                        background: theme.chip.inactiveBg,
+                        border: `1px solid ${theme.border.subtle}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '0.75rem', fontWeight: 500,
-                        color: T.tertiary, flexShrink: 0, marginTop: '0.125rem'
+                        color: theme.text.tertiary, flexShrink: 0, marginTop: '0.125rem'
                       }}>
                         {index + 1}
                       </span>
-                      <p style={{ flex: 1, fontSize: '0.875rem', color: T.body }}>{prompt}</p>
+                      <p style={{ flex: 1, fontSize: '0.875rem', color: theme.text.body }}>{prompt}</p>
                       <button
                         onClick={() => handleCopyPrompt(prompt, index)}
                         className="btn-secondary text-xs flex items-center gap-1 px-2 py-1 flex-shrink-0"
                         style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
                       >
-                        <Copy className="w-3 h-3" style={{ color: T.secondary }} />
+                        <Copy className="w-3 h-3" style={{ color: theme.text.secondary }} />
                         <span>{copiedIndex === index ? '已复制' : '复制'}</span>
                       </button>
                     </div>

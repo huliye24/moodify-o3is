@@ -12,19 +12,19 @@ export interface MoodTrack {
 
 export const MOOD_TRACKS: MoodTrack[] = [
   {
-    name: '蜷缩 · 深蓝呼吸',
+    name: '蜷缩 · 深翠呼吸',
     artist: 'Moodify',
     mood: 'coil',
-    color: '#6B7A8F',
-    description: '紧 · 沉 · 冷',
+    color: '#2D5A3D',
+    description: '紧 · 沉 · 静',
     tags: ['无力', '崩溃边缘', '什么都不想做'],
     url: 'https://cdn.pixabay.com/download/audio/2022/01/20/audio_4bc6a09939.mp3'
   },
   {
-    name: '迷茫 · 灰雾飘散',
+    name: '迷茫 · 翠雾飘散',
     artist: 'Moodify',
     mood: 'lost',
-    color: '#7A8A9F',
+    color: '#3A7A52',
     description: '不确定 · 悬浮',
     tags: ['不知道方向', '停在原地', '想走但不知道往哪'],
     url: 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_77ef6de6e5.mp3'
@@ -33,16 +33,16 @@ export const MOOD_TRACKS: MoodTrack[] = [
     name: '觉醒 · 透光微暖',
     artist: 'Moodify',
     mood: 'awaken',
-    color: '#A8B8C9',
+    color: '#5BAD7A',
     description: '看见了什么',
     tags: ['某句话击中了你', '突然明白了什么', '光透进来了'],
     url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3'
   },
   {
-    name: '舒展 · 透明呼吸',
+    name: '舒展 · 翠光呼吸',
     artist: 'Moodify',
     mood: 'expand',
-    color: '#C4D4E4',
+    color: '#8FD4A8',
     description: '打开 · 呼吸',
     tags: ['微光', '可以呼吸了', '什么都不用做'],
     url: 'https://cdn.pixabay.com/download/audio/2021/08/09/audio_dc39bce8b3.mp3'

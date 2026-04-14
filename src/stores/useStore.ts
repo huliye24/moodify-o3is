@@ -68,6 +68,17 @@ async function callDeepSeekAPI(systemPrompt: string, userPrompt: string): Promis
     throw new Error('请先在设置中配置 DeepSeek API Key')
   }
 
+  // Electron 环境：通过 IPC 代理
+  if (window.api) {
+    const result = await window.api.deepseek.generate({
+      systemPrompt,
+      userPrompt,
+      model: 'deepseek-chat',
+    })
+    return result
+  }
+
+  // 浏览器开发环境：通过 vite proxy
   const response = await fetch('/api/deepseek/chat/completions', {
     method: 'POST',
     headers: {

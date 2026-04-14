@@ -1,14 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../stores/useStore'
 import { Music, Plus, Settings, BookOpen, Trash2, FolderOpen } from 'lucide-react'
-
-const T = {
-  secondary: 'rgba(107,122,143,0.5)',
-  tertiary:   'rgba(107,122,143,0.35)',
-  body:       'rgba(196,212,228,0.75)',
-  heading:    'rgba(196,212,228,0.9)',
-  white:      'rgba(196,212,228,1)',
-}
+import { useAuroraTheme } from '../context/ThemeContext'
 
 export default function Sidebar({
   onOpenSettings,
@@ -17,6 +10,7 @@ export default function Sidebar({
   onOpenSettings: () => void
   onOpenRules: () => void
 }) {
+  const { theme } = useAuroraTheme()
   const {
     projects,
     currentProject,
@@ -46,15 +40,15 @@ export default function Sidebar({
       <div style={{
         width: '16rem', flexShrink: 0, display: 'flex', flexDirection: 'column',
         background: 'rgba(107,122,143,0.03)',
-        borderRight: '1px solid rgba(107,122,143,0.12)'
+        borderRight: `1px solid ${theme.border.subtle}`
       }}>
         {/* Logo */}
         <div style={{
           height: '3.5rem', display: 'flex', alignItems: 'center', padding: '0 1rem',
-          borderBottom: '1px solid rgba(107,122,143,0.12)'
+          borderBottom: `1px solid ${theme.border.subtle}`
         }}>
-          <Music className="w-6 h-6 mr-2" style={{ color: 'rgba(107,122,143,0.7)' }} />
-          <span style={{ fontSize: '1.125rem', fontWeight: 700, color: T.white }}>Moodify</span>
+          <Music className="w-6 h-6 mr-2" style={{ color: theme.text.secondary }} />
+          <span style={{ fontSize: '1.125rem', fontWeight: 700, color: theme.text.white }}>Moodify</span>
         </div>
 
         {/* 新建项目按钮 */}
@@ -63,8 +57,8 @@ export default function Sidebar({
             onClick={() => setShowNewProject(true)}
             className="btn-primary w-full flex items-center justify-center gap-2"
           >
-            <Plus className="w-4 h-4" style={{ color: T.body }} />
-            <span style={{ color: T.white }}>新建项目</span>
+            <Plus className="w-4 h-4" style={{ color: theme.text.body }} />
+            <span style={{ color: theme.text.white }}>新建项目</span>
           </button>
         </div>
 
@@ -82,7 +76,7 @@ export default function Sidebar({
             />
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button onClick={handleCreateProject} className="btn-primary text-sm flex-1">
-                <span style={{ color: T.white }}>创建</span>
+                <span style={{ color: theme.text.white }}>创建</span>
               </button>
               <button onClick={() => setShowNewProject(false)} className="btn-secondary text-sm">
                 取消
@@ -95,10 +89,10 @@ export default function Sidebar({
         <div className="flex-1 overflow-y-auto">
           <div style={{
             padding: '0.5rem 1rem',
-            fontSize: '0.75rem', color: T.tertiary, textTransform: 'uppercase',
+            fontSize: '0.75rem', color: theme.text.tertiary, textTransform: 'uppercase',
             letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: '0.5rem'
           }}>
-            <FolderOpen className="w-3 h-3" style={{ color: T.tertiary }} />
+            <FolderOpen className="w-3 h-3" style={{ color: theme.text.tertiary }} />
             项目列表
           </div>
           <div className="space-y-1 px-2">
@@ -111,15 +105,15 @@ export default function Sidebar({
                   padding: '0.5rem 0.75rem', borderRadius: '0.5rem',
                   cursor: 'pointer', transition: 'all 0.2s',
                   background: currentProject?.id === project.id
-                    ? 'rgba(107,122,143,0.15)'
+                    ? theme.chip.activeBg
                     : 'transparent',
                   border: currentProject?.id === project.id
-                    ? '1px solid rgba(107,122,143,0.3)'
+                    ? `1px solid ${theme.chip.activeBorder}`
                     : '1px solid transparent',
                 }}
                 onMouseEnter={(e) => {
                   if (currentProject?.id !== project.id) {
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(107,122,143,0.08)'
+                    (e.currentTarget as HTMLElement).style.background = theme.chip.hoverBg
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -128,10 +122,10 @@ export default function Sidebar({
                   }
                 }}
               >
-                <BookOpen className="w-4 h-4 flex-shrink-0" style={{ color: currentProject?.id === project.id ? T.white : T.secondary }} />
+                <BookOpen className="w-4 h-4 flex-shrink-0" style={{ color: currentProject?.id === project.id ? theme.chip.activeText : theme.text.secondary }} />
                 <span className="flex-1 truncate text-sm" style={{
                   fontSize: '0.875rem',
-                  color: currentProject?.id === project.id ? T.white : T.body,
+                  color: currentProject?.id === project.id ? theme.chip.activeText : theme.text.body,
                 }}>
                   {project.name}
                 </span>
@@ -162,19 +156,19 @@ export default function Sidebar({
         </div>
 
         {/* 底部工具 */}
-        <div style={{ borderTop: '1px solid rgba(107,122,143,0.12)', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div style={{ borderTop: `1px solid ${theme.border.subtle}`, padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <button
             onClick={onOpenRules}
             className="btn-secondary text-sm flex items-center justify-center gap-2"
           >
-            <Settings className="w-4 h-4" style={{ color: T.secondary }} />
+            <Settings className="w-4 h-4" style={{ color: theme.text.secondary }} />
             <span>规则管理</span>
           </button>
           <button
             onClick={onOpenSettings}
             className="btn-secondary text-sm flex items-center justify-center gap-2"
           >
-            <Settings className="w-4 h-4" style={{ color: T.secondary }} />
+            <Settings className="w-4 h-4" style={{ color: theme.text.secondary }} />
             <span>设置</span>
           </button>
         </div>

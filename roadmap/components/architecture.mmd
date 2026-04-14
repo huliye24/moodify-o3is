@@ -1,0 +1,54 @@
+# 架构概览
+
+```mermaid
+graph TB
+    subgraph Presentation["表现层"]
+        User([用户])
+        Electron[Electron 客户端]
+        Frontend[React + Vite 前端]
+    end
+    
+    subgraph Gateway["网关层"]
+        IPC[IPC 通信]
+        REST[REST API]
+    end
+    
+    subgraph Service["服务层"]
+        Gin[Gin HTTP]
+        Handlers[Handlers]
+        Services[业务服务]
+    end
+    
+    subgraph Infrastructure["基础设施层"]
+        GoBackend[Go 后端]
+        PythonWorker[Python Worker]
+        Prisma[(Prisma ORM)]
+        SQLite[(SQLite)]
+        SunoAPI[(Suno API)]
+    end
+    
+    User --> Electron
+    Electron --> Frontend
+    Frontend --> IPC
+    IPC --> GoBackend
+    GoBackend --> Gin
+    GoBackend --> Services
+    Services --> Handlers
+    Handlers --> Prisma
+    Handlers --> PythonWorker
+    Handlers --> SunoAPI
+    Prisma --> SQLite
+```
+
+## 技术栈
+
+| 层级 | 技术 |
+|------|------|
+| 桌面 | Electron 28 |
+| 前端 | React 18 + Vite 5 |
+| 状态 | Zustand 4 |
+| 样式 | Tailwind CSS 3 |
+| 后端 | Go 1.21 + Gin |
+| ORM | Prisma 5 |
+| 数据库 | SQLite 3 |
+| Python | 音频处理 |

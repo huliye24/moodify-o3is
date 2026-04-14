@@ -36,7 +36,7 @@ export default function PlaylistDrawer({ isOpen, onClose }: PlaylistDrawerProps)
     play()
   }
 
-  const handleDelete = (trackId: number, e: React.MouseEvent) => {
+  const handleDelete = (trackId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     removeFromPlaylist(trackId)
   }
@@ -87,8 +87,8 @@ export default function PlaylistDrawer({ isOpen, onClose }: PlaylistDrawerProps)
                   </div>
 
                   <div className="w-10 h-10 rounded bg-dark-400 flex-shrink-0 overflow-hidden">
-                    {track.coverImageUrl ? (
-                      <img src={track.coverImageUrl} alt="" className="w-full h-full object-cover" />
+                    {track.cover_image_url ? (
+                      <img src={track.cover_image_url} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-500">
                         <Music className="w-4 h-4" />

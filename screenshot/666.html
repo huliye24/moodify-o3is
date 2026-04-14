@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moodify: The Soul - 沉浸式播放器</title>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-glow: #76E4CE;
+            --main-font: "Avenir Next", "Helvetica Neue", sans-serif;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            background: #000; /* 纯黑底，突出光影 */
+            font-family: var(--main-font);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 外部容器，模拟模拟器或显示器 */
+        #app-container {
+            width: 1000px;
+            height: 700px;
+            background: #050505;
+            border-radius: 20px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 背景 Canvas：用于绘制粒子球体和流体 */
+        #visualization-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* --- UI 布局层 (Z-INDEX > 1) --- */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            pointer-events: none; /* UI 层默认穿透，方便 Canvas 交互 */
+        }
+
+        #ui-layer * {
+            pointer-events: auto; /* UI 元素内部恢复交互 */
+        }
+
+        /* 顶部标题栏 */
+        header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        /* 中间内容区 */
+        main {
+            flex-grow: 1;
+            padding: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* 左侧：歌词区 */
+        .lyrics-panel {
+            width: 350px;
+            font-size: 16px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+            text-align: left;
+        }
+
+        .lyrics-panel strong { font-size: 20px; color: white; display: block; margin-bottom: 20px; }
+
+        /* 右侧：歌曲信息 & 列表 */
+        .info-panel {
+            width: 300px;
+            text-align: right;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .song-title { font-size: 24px; font-weight: 600; }
+        .artist-name { font-size: 14px; opacity: 0.7; margin-top: 5px; }
+
+        .queue-title { margin-top: 30px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5; }
+        .queue-item { display: flex; align-items: center; justify-content: flex-end; margin-top: 15px; font-size: 14px; }
+        .color-dot { width: 10px; height: 10px; border-radius: 50%; margin-left: 10px; }
+
+        /* 底部控制栏 */
+        footer {
+            height: 100px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* 进度条 */
+        .progress-container {
+            flex-grow: 1;
+            margin: 0 30px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .progress-bar {
+            width: 40%; /* 模拟 40% 进度 */
+            height: 100%;
+            background: linear-gradient(90deg, #1A2A6C, var(--accent-glow));
+            border-radius: 2px;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        /* 控制按钮 */
+        .controls { display: flex; gap: 20px; font-size: 20px; }
+        .btn { cursor: pointer; transition: 0.2s; opacity: 0.8; }
+        .btn:hover { transform: scale(1.1); opacity: 1; }
+        .btn-main { font-size: 28px; }
+
+        .right-actions { display: flex; gap: 15px; align-items: center; }
+        .btn-immersion {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            border: 1px solid var(--glass-border);
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <canvas id="visualization-canvas"></canvas>
+
+    <div id="ui-layer">
+        <header>
+            <div class="left-nav">〈 □ </div>
+            <div class="center-title">Moodify: The Soul</div>
+            <div class="right-sys">🕐 □ ⭯ ╳</div>
+        </header>
+
+        <main>
+            <div class="lyrics-panel">
+                <strong>Current Verse</strong>
+                Coming before you, as I sing...<br>
+                The sun would brightly rise<br>
+                Upon to the slinky and ...<br>
+                lullaby that I was looking for in<br>
+                the perfect daybreak.
+                <br><br>
+                Genial words,<br>
+                coming to the every way you dear.
+            </div>
+
+            <div class="info-panel">
+                <div class="song-title">The Soul</div>
+                <div class="artist-name">Moodify Generation</div>
+                
+                <div class="queue-title">Playlist Queue</div>
+                <div class="queue-item">Aurora <span class="color-dot" style="background:#76E4CE"></span></div>
+                <div class="queue-item">Green <span class="color-dot" style="background:#7C4DFF"></span></div>
+                <div class="queue-item">Twilight <span class="color-dot" style="background:#FF4081"></span></div>
+                <div class="queue-item">Privacy <span class="color-dot" style="background:#40C4FF"></span></div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="left-actions Controls">
+                <span class="btn">🏠</span> <span class="btn">🔁</span> <span class="btn">🤍</span>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar"></div>
+            </div>
+
+            <div class="controls">
+                <span class="btn">⏮</span> <span class="btn btn-main">⏸</span> <span class="btn">⏭</span>
+            </div>
+
+            <div class="right-actions">
+                <span class="btn">🤍</span> <div class="btn-immersion btn">Immersion</div>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<script>
+    // --- 简单的 Canvas 粒子和波浪动效 ---
+    const canvas = document.getElementById('visualization-canvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('app-container');
+
+    let width, height;
+    function resize() {
+        width = canvas.width = container.offsetWidth;
+        height = canvas.height = container.offsetHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor(x, y, isStatic) {
+            this.x = x; this.y = y;
+            this.baseX = x; this.baseY = y;
+            this.size = Math.random() * 2 + 0.5;
+            this.color = `rgba(118, 228, 206, ${Math.random() * 0.5 + 0.1})`;
+            this.speed = Math.random() * 1 + 0.2;
+            this.isStatic = isStatic;
+        }
+        update() {
+            if (!this.isStatic) {
+                // 使粒子随时间产生细微漂移，模拟流体
+                this.x = this.baseX + Math.sin(Date.now() * 0.001 * this.speed) * 10;
+                this.y = this.baseY + Math.cos(Date.now() * 0.0015 * this.speed) * 10;
+            }
+        }
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    const particles = [];
+    // 1. 创建底部的流体波浪粒子 (Z轴较低)
+    for (let i = 0; i < 200; i++) {
+        particles.push(new Particle(Math.random() * width, height - 150 + Math.random() * 50, false));
+    }
+
+    // 2. 创建核心粒子球体 (Z轴较高)
+    const centerX = width / 2;
+    const centerY = height / 2 - 50;
+    const radius = 100;
+    for (let i = 0; i < 150; i++) {
+        const phi = Math.acos(-1 + (2 * i) / 150);
+        const theta = Math.sqrt(150 * Math.PI) * phi;
+        const x = centerX + radius * Math.sin(phi) * Math.cos(theta);
+        const y = centerY + radius * Math.sin(phi) * Math.sin(theta);
+        particles.push(new Particle(x, y, true)); // 这里简化为静态球体，实际应是 3D 旋转
+    }
+
+    function animate() {
+        // 使用黑色背景并保留一些 Alpha，制造拖影效果，增强流体感
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.fillRect(0, 0, width, height);
+
+        // 绘制球体核心的光晕 (模拟图中深蓝到青绿)
+        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius * 2);
+        gradient.addColorStop(0, 'rgba(118, 228, 206, 0.3)');
+        gradient.addColorStop(0.5, 'rgba(26, 42, 108, 0.2)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(centerX - radius*2, centerY - radius*2, radius*4, radius*4);
+
+        // 绘制粒子
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+
+        requestAnimationFrame(animate);
+    }
+    animate();
+</script>
+
+</body>
+</html>

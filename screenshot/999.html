@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Moodify Dashboard - 情绪潮汐</title>
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #00f2fe;
+            --text-main: rgba(255, 255, 255, 0.9);
+            --text-dim: rgba(255, 255, 255, 0.5);
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background: url('https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* 主容器 */
+        .dashboard {
+            width: 1100px;
+            height: 720px;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(40px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            display: grid;
+            grid-template-columns: 240px 1fr 240px;
+            overflow: hidden;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+        }
+
+        /* 通用面板样式 */
+        .panel { padding: 30px; display: flex; flex-direction: column; }
+
+        /* 左侧栏 */
+        .sidebar { background: rgba(0, 0, 0, 0.2); border-right: 1px solid var(--border); }
+        .nav-item { padding: 12px 0; color: var(--text-dim); cursor: pointer; transition: 0.3s; }
+        .nav-item.active { color: var(--accent); font-weight: bold; }
+        
+        /* 那个发光的球体占位 */
+        .mood-sphere {
+            width: 140px; height: 140px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), transparent),
+                        linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 50%;
+            margin: 40px auto;
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.4);
+        }
+
+        /* 中间主内容区 */
+        .main-content { overflow-y: auto; }
+        .section-title { font-size: 20px; margin-bottom: 25px; letter-spacing: 1px; }
+        .playlist-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .card {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.1); }
+        .card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
+
+        /* 右侧详情栏 */
+        .detail-panel { background: rgba(0, 0, 0, 0.1); border-left: 1px solid var(--border); }
+        .mini-cover {
+            width: 100%; aspect-ratio: 1.2;
+            border-radius: 12px;
+            background: linear-gradient(to bottom, #1e3a3a, #000);
+            margin-bottom: 20px;
+        }
+
+        /* 底部控制条 */
+        .controls {
+            grid-column: 1 / 4;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            position: relative;
+        }
+
+        /* 动态波浪进度条 */
+        .wave-progress {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 4px;
+            background: rgba(255,255,255,0.1);
+        }
+        .wave-fill {
+            width: 45%; height: 100%;
+            background: var(--accent);
+            box-shadow: 0 0 15px var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <aside class="panel sidebar">
+        <h2 style="font-size: 18px; margin-bottom: 40px;">M Moodify</h2>
+        <div class="nav-item active">🏠 Moodify</div>
+        <div class="nav-item">☰ Category</div>
+        <div class="nav-item">☆ Library</div>
+        
+        <div class="mood-sphere"></div>
+        
+        <div style="display: flex; gap: 8px; margin-top: auto;">
+            <div style="width:25px;height:25px;background:#fff;border-radius:4px"></div>
+            <div style="width:25px;height:25px;background:#4facfe;border-radius:4px"></div>
+            <div style="width:25px;height:25px;background:#00f2fe;border-radius:4px"></div>
+            <div style="width:25px;height:25px;background:#000;border-radius:4px"></div>
+        </div>
+    </aside>
+
+    <main class="panel main-content">
+        <div class="section-title">Sweet Tracks</div>
+        <div class="playlist-grid">
+            <div class="card"><img src="https://picsum.photos/seed/1/200" alt=""></div>
+            <div class="card"><img src="https://picsum.photos/seed/2/200" alt=""></div>
+            <div class="card"><img src="https://picsum.photos/seed/3/200" alt=""></div>
+            <div class="card"><img src="https://picsum.photos/seed/4/200" alt=""></div>
+            <div class="card"><img src="https://picsum.photos/seed/5/200" alt=""></div>
+            <div class="card"><img src="https://picsum.photos/seed/6/200" alt=""></div>
+            <div class="card"><img src="https://picsum.photos/seed/7/200" alt=""></div>
+            <div class="card"><img src="https://picsum.photos/seed/8/200" alt=""></div>
+            <div class="card"><img src="https://picsum.photos/seed/9/200" alt=""></div>
+            <div class="card"><img src="https://picsum.photos/seed/10/200" alt=""></div>
+            <div class="card"><img src="https://picsum.photos/seed/11/200" alt=""></div>
+            <div class="card"><img src="https://picsum.photos/seed/12/200" alt=""></div>
+        </div>
+    </main>
+
+    <aside class="panel detail-panel">
+        <div class="mini-cover"></div>
+        <div style="font-size: 18px;">Now Playing</div>
+        <div style="font-size: 12px; color: var(--text-dim); margin-top: 5px;">Aurora - Deep Sea</div>
+        
+        <div style="margin-top: 40px;">
+            <div style="font-size: 13px; margin-bottom: 15px;">Liked Items</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-bottom: 10px;">● Aurora</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-bottom: 10px;">● Twilight</div>
+            <div style="font-size: 12px; color: var(--accent); margin-bottom: 10px;">● Now Playing</div>
+        </div>
+    </aside>
+
+    <footer class="controls">
+        <span style="cursor:pointer">⏮</span>
+        <span style="font-size: 24px; cursor:pointer">⏯</span>
+        <span style="cursor:pointer">⏭</span>
+        <div class="wave-progress">
+            <div class="wave-fill"></div>
+        </div>
+    </footer>
+</div>
+
+</body>
+</html>

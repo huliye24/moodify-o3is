@@ -105,3 +105,92 @@ model ApiLog {
   @@index([createdAt])
   @@index([status])
 }
+
+// ═══════════════════════════════════════════════════════════
+// 本地音乐库（方案 B / 方案 C 共用）
+// ═══════════════════════════════════════════════════════════
+
+model LocalArtist {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  coverPath   String?
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  songs       LocalSong[]
+  albums      LocalAlbum[]
+}
+
+model LocalAlbum {
+  id          Int         @id @default(autoincrement())
+  title       String
+  artistId    Int?
+  artist      LocalArtist? @relation(fields: [artistId], references: [id])
+  coverPath   String?
+  year        Int?
+  genre       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  songs       LocalSong[]
+
+  @@unique([title, artistId])
+}
+
+model LocalSong {
+  id          Int       @id @default(autoincrement())
+  title       String
+  artistName  String?
+  albumName   String?
+  genre       String?
+  year        Int?
+  duration    Int       @default(0)       // 秒
+  trackNumber Int?
+
+  // 文件路径（相对路径，存于 moodify_db/library/）
+  audioPath   String?
+  coverPath   String?
+  lyricsPath  String?
+  o3ics       String?   // 纯文本歌词
+
+  // 播放信息
+  playCount   Int       @default(0)
+  favorite    Boolean   @default(false)
+
+  // 文件哈希（用于去重）
+  fileHash    String?   @unique
+
+  // 关联
+  artistId    Int?
+  artist      LocalArtist? @relation(fields: [artistId], references: [id])
+  albumId     Int?
+  album       LocalAlbum?  @relation(fields: [albumId], references: [id])
+  playlists   LocalPlaylistSong[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([artistName])
+  @@index([title])
+  @@index([favorite])
+}
+
+model LocalPlaylist {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  coverPath   String?
+  songs       LocalPlaylistSong[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model LocalPlaylistSong {
+  id          Int           @id @default(autoincrement())
+  playlistId  Int
+  playlist    LocalPlaylist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  songId      Int
+  song        LocalSong     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  position    Int           @default(0)
+
+  @@unique([playlistId, songId])
+}

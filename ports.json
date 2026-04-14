@@ -1,0 +1,17 @@
+{
+  "name": "moodify",
+  "version": "1.0.0",
+  "description": "Moodify 端口配置 - 统一管理服务端口",
+  "ports": {
+    "frontend": 3000,
+    "backend": 3001,
+    "electron_player": 3002,
+    "electron_web": 3003
+  },
+  "notes": {
+    "frontend": "Vite 开发服务器端口 (http://localhost:3000)，Electron 主窗口加载此端口",
+    "backend": "Go 后端 API 服务端口 (http://localhost:3001)，Vite proxy 代理 /api 请求到此处",
+    "electron_player": "Electron 播放器窗口专用端口",
+    "electron_web": "Electron Web 窗口专用端口"
+  }
+}

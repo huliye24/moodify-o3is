@@ -1,0 +1,67 @@
+# 性能契约
+
+> 约束类型: performance
+> 版本: 1.0.0
+> 最后更新: 2026-04-13
+
+## 响应时间
+
+```yaml
+response_times:
+  api:
+    p50_ms: 50
+    p95_ms: 100
+    p99_ms: 200
+    
+  ui:
+    interaction_ms: 100
+    navigation_ms: 300
+    render_ms: 16      # 60fps
+    
+  background:
+    sync_ms: 5000
+    export_ms: 30000
+```
+
+## 吞吐量
+
+```yaml
+throughput:
+  api:
+    max_rps: 100
+    concurrent_connections: 50
+    
+  batch:
+    max_batch_size: 100
+    batch_timeout_ms: 30000
+```
+
+## 资源使用
+
+```yaml
+resources:
+  cpu:
+    idle_percent: <5
+    peak_percent: <80
+    
+  memory:
+    idle_mb: 200
+    peak_mb: 512
+    leak_threshold_mb: 50  # 1小时内
+    
+  disk:
+    io_wait_percent: <10
+    cache_size_mb: 100
+```
+
+## 监控指标
+
+```yaml
+monitoring:
+  apdex_score: 0.9
+  
+  sli:
+    availability: 0.99
+    latency_p95: 100ms
+    error_rate: 0.001
+```
