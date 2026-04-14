@@ -1,44 +1,63 @@
-# 1_roadmap - 可演化的科技树
+# ROADMAP - 技术路线图
 
-此目录包含 Moodify 项目的技术演进路线图，定义"什么时间做什么事"。
+## 概述
+
+此文件夹包含 Moodify 项目的组件依赖图、技术演进路线和里程碑规划。
 
 ## 目录结构
 
 ```
-1_roadmap/
-├── README.md                # 本文件
-├── components/              # 组件定义与依赖
-│   ├── definition.yaml      # 组件清单
-│   ├── dependencies.yaml    # 依赖关系图
-│   └── architecture.mmd     # Mermaid 架构图
-├── evolution/               # 演进路线
-│   ├── monthly/             # 月度里程碑
-│   │   ├── M01-核心框架.md
-│   │   ├── M02-创作流程.md
-│   │   └── ...
-│   └── weekly/              # 周任务分解
-└── diagrams/                # 架构图源文件
-    ├── architecture.mmd
-    └── dataflow.mmd
+AIP_Protocol/1_roadmap/
+├── README.md                    # 本文件
+├── INDEX.md                    # 路线索引
+├── components/                 # 组件定义
+│   ├── frontend.md            # 前端组件
+│   ├── backend.md             # 后端组件
+│   └── external.md            # 外部依赖
+├── evolution/                 # 演进路线
+│   ├── monthly/               # 月度里程碑
+│   └── weekly/                # 周任务
+└── diagrams/                  # 架构图
+    ├── architecture.mmd       # Mermaid 架构图
+    └── dataflow.mmd           # 数据流图
 ```
 
-## 更新频率
+## 组件依赖总览
 
-- **月度更新**：每月初更新当月目标
-- **周度同步**：每周五根据任务进度调整
-- **实时调整**：遇到重大变更时立即更新
+```mermaid
+graph TB
+    User([用户])
+    Electron[Electron 客户端]
+    Frontend[React + Vite 前端]
+    IPC[IPC 通信层]
+    GoBackend[Go 后端 API]
+    Gin[Gin HTTP 服务]
+    Services[业务服务层]
+    PythonWorker[Python 工作器]
+    SQLite[(SQLite)]
+    Prisma[(Prisma ORM)]
+    SunoAPI[(Suno API)]
 
-## 节点状态
-
-| 状态 | 说明 |
-|------|------|
-| `planned` | 计划中，未开始 |
-| `in_progress` | 进行中 |
-| `completed` | 已完成 |
-| `blocked` | 被阻塞，需解决依赖 |
+    User --> Electron
+    Electron --> Frontend
+    Frontend --> IPC
+    IPC --> GoBackend
+    GoBackend --> Gin
+    GoBackend --> Services
+    Services --> PythonWorker
+    Services --> Prisma
+    Services --> SunoAPI
+    Prisma --> SQLite
+```
 
 ## 快速导航
 
-- [技术路线总览](./README.md)
-- [月度里程碑](../roadmap/README.md)
-- [组件定义](./components/definition.yaml)
+- [组件定义](./components/)
+- [演进路线](./evolution/)
+
+## 更新记录
+
+| 日期 | 内容 | 负责人 |
+|------|------|--------|
+| 2026-04-13 | 创建技术路线图 | AI Assistant |
+| 2026-04-14 | 迁移到 AIP_Protocol/1_roadmap/ | AI Assistant |

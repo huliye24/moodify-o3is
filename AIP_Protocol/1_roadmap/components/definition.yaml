@@ -1,0 +1,106 @@
+# 组件定义
+
+## 前端组件
+
+### electron (桌面外壳)
+
+```yaml
+component: electron
+path: ./electron
+interface:
+  type: ipc_main/ipc_renderer
+port: main_process
+slo:
+  startup_ms: 5000
+  memory_mb: 256
+dependencies: [frontend]
+```
+
+### frontend (React 应用)
+
+```yaml
+component: frontend
+path: ./src
+interface:
+  type: browser_window
+port: 5173 (dev) / bundled (prod)
+slo:
+  fcp_ms: 1500
+  tti_ms: 3000
+  bundle_mb: 2
+dependencies: [backend_api]
+```
+
+## 后端组件
+
+### backend (Go API)
+
+```yaml
+component: backend
+path: ./backend
+interface:
+  type: rest_api
+port: 8080
+routes:
+  - /api/v1/*
+  - /health
+slo:
+  response_ms: 200
+  throughput_rps: 100
+dependencies: [prisma, python_worker]
+```
+
+### prisma (ORM)
+
+```yaml
+component: prisma
+path: ./prisma
+interface:
+  type: orm_client
+slo:
+  query_ms: 50
+dependencies: [sqlite]
+```
+
+### python_worker (Python 处理)
+
+```yaml
+component: python_worker
+path: ./python
+interface:
+  type: subprocess
+protocol: json_stdio
+slo:
+  processing_ms: 10000
+  max_concurrent: 4
+dependencies: []
+```
+
+## 外部依赖
+
+### suno_api (Suno API)
+
+```yaml
+component: suno_api
+path: external
+interface:
+  type: rest_api
+url: https://api.suno.ai
+dependencies: []
+constraints:
+  rate_limit: 10
+  timeout_ms: 30000
+```
+
+### sqlite (本地数据库)
+
+```yaml
+component: sqlite
+path: ./data/moodify.db
+interface:
+  type: file_sqlite
+slo:
+  query_ms: 50
+  size_limit_gb: 10
+dependencies: []
+```
