@@ -1,0 +1,178 @@
+# 自检钩子（HOOKS）
+
+每个任务完成后，AI 必须按顺序执行以下自检步骤。
+
+## 钩子清单
+
+### 1. 检查文件修改范围
+
+**ID**: `check_files_modified`  
+**描述**: 确认只修改了目标文件，无意外改动
+
+```bash
+# 查看变更文件列表
+git status --short
+git diff --name-only HEAD
+```
+
+**预期**:
+- 只修改了任务相关的文件
+- 未修改锁定的 UI 层组件（除非任务明确要求）
+
+**失败处理**: 如果有多余修改，立即撤销或提交单独任务
+
+---
+
+### 2. 运行代码检查
+
+**ID**: `run_linting`  
+**描述**: 确保代码符合项目规范
+
+```bash
+# TypeScript 类型检查
+npx tsc --noEmit
+
+# ESLint（如有）
+npm run lint
+
+# 格式化检查
+npm run format:check
+```
+
+**预期**: 零错误、零警告
+
+---
+
+### 3. 执行相关测试
+
+**ID**: `run_tests`  
+**描述**: 运行受影响的测试套件
+
+```bash
+# 单元测试
+npm test
+
+# E2E 测试（如涉及）
+npm run test:e2e
+```
+
+**预期**: 所有测试通过，覆盖率不降低
+
+---
+
+### 4. 验证任务文件格式
+
+**ID**: `validate_task_format`  
+**描述**: 运行任务验证工具
+
+```bash
+node tools/validate-tasks.js
+```
+
+**预期**: 所有任务文件格式正确，无错误
+
+---
+
+### 5. 更新全局仪表盘
+
+**ID**: `update_dashboard`  
+**描述**: 刷新项目进度视图
+
+```bash
+node tools/update-dashboard.js
+```
+
+**预期**: 仪表盘成功更新，显示最新进度
+
+---
+
+### 6. 记录任务完成事件
+
+**ID**: `log_completion`  
+**描述**: 将完成事件追加到事件日志
+
+自动执行：
+1. 读取 `3_共享/event_log.yaml`
+2. 追加任务完成记录
+3. 保存文件
+
+**记录内容**:
+```yaml
+- timestamp: "2026-04-13T15:30:00Z"
+  task_id: "T20260413_001"
+  event: "task_completed"
+  assignee: "AI Assistant"
+  duration_minutes: 45
+  files_modified: ["src/hooks/useProject.ts"]
+  notes: "无问题，一次通过"
+```
+
+---
+
+### 7. 提交更改（可选）
+
+**ID**: `commit_changes`  
+**描述**: 将更改提交到 Git（仅在任务明确要求时）
+
+```bash
+git add .
+git commit -m "feat: 任务标题
+
+详细描述变更内容、原因和影响
+
+相关任务: T20260413_001"
+```
+
+**提交规范**:
+- 使用约定式提交（Conventional Commits）
+- 关联任务 ID
+- 说明变更原因
+
+---
+
+## 钩子执行顺序
+
+```
+任务完成 → [1 → 2 → 3 → 4 → 5 → 6] → (可选 7)
+```
+
+**强制钩子**: 1-6（必须全部通过）  
+**可选钩子**: 7（仅在需要时执行）
+
+---
+
+## 钩子失败处理
+
+如果某个钩子失败：
+
+1. **立即停止**，不继续后续钩子
+2. **诊断问题**，尝试修复
+3. 如果无法修复：
+   - 记录失败原因到任务 notes
+   - 将任务状态改为 `blocked`
+   - 在 `event_log.yaml` 中记录阻塞事件
+   - 通知用户
+
+---
+
+## 钩子自定义
+
+可以针对特定任务跳过某些钩子，需在任务 JSON 中声明：
+
+```json
+{
+  "task_id": "T20260413_001",
+  "skip_hooks": ["run_tests"],  // 跳过测试
+  "hook_overrides": {
+    "run_tests": {
+      "command": "npm test -- --skip=e2e"  // 自定义命令
+    }
+  }
+}
+```
+
+**注意**: 跳过钩子需有充分理由，并在任务 notes 中说明。
+
+---
+
+> **重要**: HOOKS 是 AIP 协议的质量保障机制，不可随意跳过。
