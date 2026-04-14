@@ -49,6 +49,9 @@ func (s *LibraryService) ScanLibrary(rootPath string) (*ScanResult, error) {
 		return nil, fmt.Errorf("创建封面目录失败: %v", err)
 	}
 
+	// 用新路径重新初始化 Scanner，确保路径参数生效
+	s.scanner = scanner.NewScanner(rootPath)
+
 	// 扫描文件
 	scanResult, err := s.scanner.ScanDirectory()
 	if err != nil {

@@ -43,19 +43,20 @@ interface Window {
     http: {
       get: (url: string) => Promise<any>
       post: (url: string, body?: any) => Promise<any>
+      put: (url: string, body?: any) => Promise<any>
       delete: (url: string) => Promise<any>
     }
     library: {
       openFolder: () => Promise<string | null>
-      getLibraryPath: () => Promise<string>
-      scanFolder: (folderPath: string) => Promise<any[]>
-      getAudioMetadata: (filePath: string) => Promise<any>
-      readAudioFile: (filePath: string) => Promise<string>
-      getCoverImage: (coverPath: string) => Promise<string | null>
-      getLyricsFile: (o3icsPath: string) => Promise<string | null>
-      importFile: (sourcePath: string, destFolder: string) => Promise<string>
-      deleteFile: (filePath: string) => Promise<boolean>
-      getLibraryStats: () => Promise<any>
+      scanFolder: (folderPath: string) => Promise<LibraryApiResponse>
+      getAudioMetadata: (filePath: string) => Promise<LibraryApiResponse>
+      getLibraryStats: () => Promise<LibraryApiResponse>
     }
   }
+}
+
+interface LibraryApiResponse {
+  code?: number
+  message?: string
+  data?: any
 }

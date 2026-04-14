@@ -60,6 +60,13 @@ contextBridge.exposeInMainWorld('api', {
             return () => ipcRenderer.removeListener('suno:progress', handler);
         },
     },
+    // 音乐库相关接口，main 进程通过 HTTP 调用后端 API
+    library: {
+        openFolder: () => ipcRenderer.invoke('app:selectMusicFolder').then(r => r?.path ?? null),
+        scanFolder: (folderPath) => ipcRenderer.invoke('library:scan', folderPath),
+        getAudioMetadata: (filePath) => ipcRenderer.invoke('library:metadata', filePath),
+        getLibraryStats: () => ipcRenderer.invoke('library:stats'),
+    },
 });
 
 console.log('[Moodify] 预加载脚本已加载');

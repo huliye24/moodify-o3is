@@ -173,6 +173,61 @@ ipcMain.handle('app:selectMusicFolder', async () => {
     return { success: true, path: folderPath, files };
 });
 
+// ============ 音乐库 IPC（转发到后端 API） ============
+
+// 后端 API 地址
+const API_BASE = 'http://localhost:8080/api/v1';
+
+// 通用的 fetch 封装
+async function apiFetch(endpoint, options = {}) {
+    const url = `${API_BASE}${endpoint}`;
+    const res = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+    });
+    if (!res.ok) {
+        throw new Error(`API ${endpoint} failed: ${res.status}`);
+    }
+    return res.json();
+}
+
+// 扫描文件夹（POST /api/v1/library/scan）
+ipcMain.handle('library:scan', async (event, folderPath) => {
+    try {
+        const data = await apiFetch('/library/scan', {
+            method: 'POST',
+            body: JSON.stringify({ path: folderPath }),
+        });
+        return data;
+    } catch (err) {
+        console.error('[Moodify] library:scan 失败:', err);
+        return { code: 1, message: err.message, data: null };
+    }
+});
+
+// 获取音频元数据（GET /api/v1/library/metadata?path=...）
+ipcMain.handle('library:metadata', async (event, filePath) => {
+    try {
+        const encoded = encodeURIComponent(filePath);
+        const data = await apiFetch(`/library/metadata?path=${encoded}`);
+        return data;
+    } catch (err) {
+        console.error('[Moodify] library:metadata 失败:', err);
+        return { code: 1, message: err.message, data: null };
+    }
+});
+
+// 获取音乐库统计（GET /api/v1/library/stats）
+ipcMain.handle('library:stats', async () => {
+    try {
+        const data = await apiFetch('/library/stats');
+        return data;
+    } catch (err) {
+        console.error('[Moodify] library:stats 失败:', err);
+        return { code: 1, message: err.message, data: null };
+    }
+});
+
 // ============ 前端 API IPC（由 preload 转发） ============
 // settings
 ipcMain.handle('settings:get', (event, key) => {
