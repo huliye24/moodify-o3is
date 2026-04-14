@@ -7,18 +7,31 @@ import {
   Volume2,
   VolumeX,
   Repeat,
+  Repeat1,
+  Shuffle,
   Heart,
 } from 'lucide-react'
-import { MOOD_TRACKS } from '../../stores/useMoodStore'
-import { useMoodStore } from '../../stores/useMoodStore'
+import { MOOD_TRACKS, useMoodStore, type PlayMode } from '../../stores/useMoodStore'
 
 interface PersistentPlayerProps {
   mode?: 'fullscreen' | 'minimal'
 }
 
+const MOOD_LABELS: Record<string, string> = {
+  coil: '蜷缩',
+  lost: '迷茫',
+  awaken: '觉醒',
+  expand: '舒展',
+}
+
+const PLAY_MODE_ICONS: Record<PlayMode, React.ReactNode> = {
+  sequential: <Repeat className="w-4 h-4" />,
+  'repeat-one': <Repeat1 className="w-4 h-4" />,
+  shuffle: <Shuffle className="w-4 h-4" />,
+}
+
 export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerProps) {
   const [activeNav, setActiveNav] = useState('home')
-
   const audioRef = useRef<HTMLAudioElement>(null)
 
   const {
@@ -26,14 +39,14 @@ export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerP
     isPlaying,
     volume,
     isMuted,
-    isLooping,
+    playMode,
     currentTime,
     duration,
     setAudio,
     togglePlay,
     setVolume,
     toggleMute,
-    toggleLoop,
+    cyclePlayMode,
     skipNext,
     skipPrev,
     seek,
@@ -46,9 +59,7 @@ export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerP
 
   useEffect(() => {
     const audio = audioRef.current
-    if (audio) {
-      setAudio(audio)
-    }
+    if (audio) setAudio(audio)
   }, [setAudio])
 
   useEffect(() => {
@@ -57,14 +68,7 @@ export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerP
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime)
     const handleLoadedMetadata = () => setDuration(audio.duration)
-    const handleEnded = () => {
-      if (isLooping) {
-        audio.currentTime = 0
-        audio.play().catch(() => {})
-      } else {
-        skipNext()
-      }
-    }
+    const handleEnded = () => skipNext()
 
     audio.addEventListener('timeupdate', handleTimeUpdate)
     audio.addEventListener('loadedmetadata', handleLoadedMetadata)
@@ -75,7 +79,7 @@ export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerP
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
       audio.removeEventListener('ended', handleEnded)
     }
-  }, [isLooping, skipNext, setCurrentTime, setDuration])
+  }, [skipNext, setCurrentTime, setDuration])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -90,6 +94,9 @@ export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerP
   }
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 45
+
+  // Play mode button tint
+  const playModeActive = playMode !== 'sequential'
 
   if (mode === 'fullscreen') {
     return (
@@ -131,7 +138,6 @@ export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerP
             <aside className="w-60 flex-shrink-0 bg-white/10 border-r border-white/20 p-8 flex flex-col h-full">
               <h2 className="text-xl font-bold text-gray-800 mb-10">M Moodify</h2>
 
-              {/* Navigation */}
               <nav className="space-y-4">
                 <div
                   className={`cursor-pointer transition-all duration-300 ${
@@ -188,9 +194,7 @@ export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerP
                   <div
                     key={track.mood}
                     className="aspect-square rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border border-white/20 bg-white/20"
-                    onClick={() => {
-                      loadTrack(index)
-                    }}
+                    onClick={() => loadTrack(index)}
                   >
                     <img
                       src={track.cover}
@@ -221,6 +225,20 @@ export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerP
               <div className="text-base text-gray-800 font-semibold mb-1">Now Playing</div>
               <div className="text-sm text-gray-600">{currentTrack.artist}</div>
               <div className="text-sm text-gray-500 -mt-1 mb-6">{currentTrack.name}</div>
+
+              {/* Mood Label */}
+              <div className="mb-4">
+                <span
+                  className="text-xs px-2.5 py-1 rounded-full font-medium"
+                  style={{
+                    background: `${currentTrack.color}20`,
+                    color: currentTrack.color,
+                    border: `1px solid ${currentTrack.color}40`,
+                  }}
+                >
+                  {MOOD_LABELS[currentTrack.mood] ?? currentTrack.mood}
+                </span>
+              </div>
 
               {/* Liked Items */}
               <div className="mt-auto">
@@ -285,12 +303,12 @@ export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerP
               </button>
 
               <button
-                onClick={toggleLoop}
-                className={`transition-all duration-300 hover:scale-110 ${
-                  isLooping ? 'text-pink-600' : 'text-gray-700 hover:text-gray-900'
+                onClick={cyclePlayMode}
+                className={`p-2 transition-all duration-300 hover:scale-110 ${
+                  playModeActive ? 'text-pink-600' : 'text-gray-700 hover:text-gray-900'
                 }`}
               >
-                <Repeat className="w-5 h-5" />
+                {PLAY_MODE_ICONS[playMode]}
               </button>
 
               <button
@@ -319,7 +337,7 @@ export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerP
     )
   }
 
-  // Minimal Mode - Bottom Bar
+  // ── Minimal Mode - Bottom Bar ──────────────────────────────────────────────
   return (
     <div
       className="persistent-player fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-t border-white/50 transition-all duration-500 shadow-lg"
@@ -343,7 +361,18 @@ export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerP
           </div>
           <div className="truncate">
             <div className="text-sm text-gray-800 truncate font-medium">{currentTrack.name}</div>
-            <div className="text-xs text-gray-500 truncate">{currentTrack.artist}</div>
+            <div className="text-xs text-gray-500 truncate flex items-center gap-1.5">
+              <span
+                className="text-[10px] px-1.5 py-0.5 rounded-full"
+                style={{
+                  background: `${currentTrack.color}18`,
+                  color: currentTrack.color,
+                }}
+              >
+                {MOOD_LABELS[currentTrack.mood] ?? currentTrack.mood}
+              </span>
+              <span>{currentTrack.artist}</span>
+            </div>
           </div>
           <button className="p-2 text-gray-400 hover:text-gray-700 transition-all duration-300 hover:scale-110">
             <Heart className="w-4 h-4" />
@@ -420,12 +449,13 @@ export default function PersistentPlayer({ mode = 'minimal' }: PersistentPlayerP
           </button>
 
           <button
-            onClick={toggleLoop}
+            onClick={cyclePlayMode}
             className={`p-2 transition-all duration-300 hover:scale-110 ${
-              isLooping ? 'text-pink-600' : 'text-gray-500 hover:text-gray-800'
+              playModeActive ? 'text-pink-600' : 'text-gray-500 hover:text-gray-800'
             }`}
+            title={`播放模式: ${playMode === 'sequential' ? '顺序播放' : playMode === 'repeat-one' ? '单曲循环' : '随机播放'}`}
           >
-            <Repeat className="w-4 h-4" />
+            {PLAY_MODE_ICONS[playMode]}
           </button>
         </div>
       </div>

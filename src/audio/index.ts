@@ -15,7 +15,6 @@ export { LoudnessProcessor, LOUDNESS_PRESETS } from './processors/LoudnessProces
 export { useAudioEngine } from './hooks/useAudioEngine'
 export { useWaveform } from './hooks/useWaveform'
 export { useLyrics } from './hooks/useLyrics'
-export { useSunoPlayer } from './hooks/useSunoPlayer'
 
 // 组件
 export { WaveformCanvas, WaveformBars } from './components/WaveformCanvas'
