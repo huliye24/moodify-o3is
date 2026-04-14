@@ -124,13 +124,13 @@ export const useLibraryStore = create<LibraryState>()(
 
       updateSong: async (id, updates) => {
         if (!window.api) return
-        try { await window.api.http.post(`/api/v1/local-songs/${id}`, updates) } catch {}
+        try { await window.api.http.put(`/api/v1/local-songs/${id}`, updates) } catch {}
         await get().loadSongs()
       },
 
       deleteSong: async (id) => {
         if (!window.api) return
-        try { await window.api.http.post(`/api/v1/local-songs/${id}`) } catch {}
+        try { await window.api.http.delete(`/api/v1/local-songs/${id}`) } catch {}
         await get().loadSongs()
       },
 
@@ -176,7 +176,7 @@ export const useLibraryStore = create<LibraryState>()(
 
       deletePlaylist: async (id) => {
         if (!window.api) return
-        try { await window.api.http.post(`/api/v1/local-playlists/${id}`) } catch {}
+        try { await window.api.http.delete(`/api/v1/local-playlists/${id}`) } catch {}
         await get().loadPlaylists()
       },
 
@@ -189,7 +189,7 @@ export const useLibraryStore = create<LibraryState>()(
 
       removeSongFromPlaylist: async (playlistId, songId) => {
         if (!window.api) return
-        try { await window.api.http.post(`/api/v1/local-playlists/${playlistId}/songs`, { song_id: songId }) } catch {}
+        try { await window.api.http.delete(`/api/v1/local-playlists/${playlistId}/songs/${songId}`) } catch {}
         await get().loadPlaylists()
       },
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react'
-import { useMusicStore } from '../stores/useMusicStore'
+import { usePlayerStore } from '../stores/usePlayerStore'
 
 export function useAudioPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -12,7 +12,7 @@ export function useAudioPlayer() {
     setCurrentTime,
     setDuration,
     pause
-  } = useMusicStore()
+  } = usePlayerStore()
 
   // 初始化音频元素
   useEffect(() => {

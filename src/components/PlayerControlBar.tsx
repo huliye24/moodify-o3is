@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, ListMusic } from 'lucide-react'
-import { useMusicStore } from '../stores/useMusicStore'
+import { usePlayerStore } from '../stores/usePlayerStore'
 import { useAudioPlayer } from '../hooks/useAudioPlayer'
 
 interface PlayerControlBarProps {
@@ -21,7 +21,7 @@ export default function PlayerControlBar({ onOpenPlaylist }: PlayerControlBarPro
     setVolume,
     toggleMute,
     setCurrentTrack
-  } = useMusicStore()
+  } = usePlayerStore()
 
   const { seek } = useAudioPlayer()
   const [showVolumeSlider, setShowVolumeSlider] = useState(false)

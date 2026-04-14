@@ -1,5 +1,5 @@
 import { X, Play, Pause, Trash2, Music } from 'lucide-react'
-import { useMusicStore } from '../stores/useMusicStore'
+import { usePlayerStore } from '../stores/usePlayerStore'
 
 interface PlaylistDrawerProps {
   isOpen: boolean
@@ -15,7 +15,7 @@ export default function PlaylistDrawer({ isOpen, onClose }: PlaylistDrawerProps)
     removeFromPlaylist,
     play,
     pause
-  } = useMusicStore()
+  } = usePlayerStore()
 
   const togglePlay = (track: typeof currentTrack, e: React.MouseEvent) => {
     e.stopPropagation()

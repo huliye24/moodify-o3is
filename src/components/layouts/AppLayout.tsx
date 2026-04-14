@@ -1,20 +1,40 @@
-import { ReactNode } from 'react'
+import { useState } from 'react'
+import { TabId } from '../components/AppTabLayout'
+import AppTabLayout from '../components/AppTabLayout'
 
-interface AppLayoutProps {
-  children?: ReactNode
-  // 保留接口以备将来扩展
+import MainContent from '../components/MainContent'
+import MoodPage from '../pages/MoodPage'
+import LibraryPage from '../pages/LibraryPage'
+import BrandPage from '../pages/BrandPage'
+
+function TabContent({ activeTab }: { activeTab: TabId }) {
+  switch (activeTab) {
+    case 'o3ics':
+      return <MainContent />
+    case 'mood':
+      return <MoodPage />
+    case 'library':
+      return <LibraryPage />
+    case 'brand':
+      return <BrandPage />
+    default:
+      return <MainContent />
+  }
 }
 
-export default function AppLayout({ children }: AppLayoutProps) {
-  // 暂时返回一个简单的占位，后续可扩展为带侧边栏的布局
+export default function AppLayout() {
+  const [activeTab, setActiveTab] = useState<TabId>('o3ics')
+
   return (
-    <div className="h-screen flex flex-col bg-dark-500">
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-light text-white mb-4">歌词创作器</h1>
-          <p className="text-gray-500">此功能正在重构中...</p>
-        </div>
-      </div>
+    <div className="h-screen flex flex-col overflow-hidden" style={{ background: '#0a0a0f' }}>
+      <AppTabLayout
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      >
+        {(tab) => (
+          <TabContent activeTab={tab} />
+        )}
+      </AppTabLayout>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react'
-import { useMusicStore } from '../stores/useMusicStore'
+import { usePlayerStore } from '../stores/usePlayerStore'
 
 const POLLING_INTERVAL = 3000 // 3秒轮询一次
 
@@ -15,7 +15,7 @@ export function useSunoPolling() {
     setGenerationError,
     addToPlaylist,
     setCurrentTrack
-  } = useMusicStore()
+  } = usePlayerStore()
 
   // 执行轮询
   const poll = useCallback(async (taskId: string) => {

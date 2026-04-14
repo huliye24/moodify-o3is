@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Music, Play, Trash2, RefreshCw, Loader2, AlertCircle, ChevronDown, X } from 'lucide-react'
-import { useMusicStore } from '../stores/useMusicStore'
+import { usePlayerStore } from '../stores/usePlayerStore'
 import { useSunoPolling } from '../hooks/useSunoPolling'
 import { MUSIC_STYLES, SUNO_MODELS } from '../types'
 import type { Lyrics, MusicTrack } from '../types'
@@ -13,7 +13,7 @@ interface MusicPanelProps {
 }
 
 export default function MusicPanel({ o3ics, onSelectTrack, onClose, initialPrompt }: MusicPanelProps) {
-  const { setCurrentTrack, generationProgress, isGenerating } = useMusicStore()
+  const { setCurrentTrack, generationProgress, isGenerating } = usePlayerStore()
   const { startPolling } = useSunoPolling()
 
   const [tracks, setTracks] = useState<MusicTrack[]>([])
