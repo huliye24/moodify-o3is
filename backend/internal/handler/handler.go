@@ -473,7 +473,6 @@ func (h *Handler) SunoSubmit(c *gin.Context) {
 		baseURL = "https://api.sunoai.com"
 	}
 
-	// 构建请求体
 	reqBody, _ := json.Marshal(params)
 
 	req, err := http.NewRequest("POST", baseURL+"/suno/submit/music", bytes.NewBuffer(reqBody))
@@ -510,7 +509,6 @@ func (h *Handler) SunoSubmit(c *gin.Context) {
 		return
 	}
 
-	// 自动创建 MusicTrack 记录
 	track := &model.MusicTrack{
 		O3icsID:      params.O3ics,
 		TaskID:       result.TaskID,
@@ -587,7 +585,6 @@ func (h *Handler) SunoFetch(c *gin.Context) {
 		return
 	}
 
-	// 更新 MusicTrack 状态
 	for _, task := range result.Tasks {
 		updateData := map[string]interface{}{
 			"status": MapSunoStatus(task.Status),
@@ -610,15 +607,14 @@ func (h *Handler) SunoFetch(c *gin.Context) {
 		h.repo.UpdateMusicTrackByTaskID(task.TaskID, updateData)
 	}
 
-	// 返回给前端的数据格式
 	tasks := make([]map[string]interface{}, 0, len(result.Tasks))
 	for _, task := range result.Tasks {
 		taskMap := map[string]interface{}{
-			"taskId": task.TaskID,
-			"status": MapSunoStatus(task.Status),
-			"progress": GetStatusProgress(MapSunoStatus(task.Status)),
+			"taskId":    task.TaskID,
+			"status":    MapSunoStatus(task.Status),
+			"progress":  GetStatusProgress(MapSunoStatus(task.Status)),
 			"failReason": task.FailReason,
-			"songs": task.Data.Songs,
+			"songs":     task.Data.Songs,
 		}
 		tasks = append(tasks, taskMap)
 	}
@@ -626,7 +622,6 @@ func (h *Handler) SunoFetch(c *gin.Context) {
 	response.Success(c, map[string]interface{}{"tasks": tasks})
 }
 
-// MapSunoStatus 将 Suno 状态映射为内部状态
 func MapSunoStatus(sunoStatus string) string {
 	switch sunoStatus {
 	case "NOT_START":
@@ -644,7 +639,6 @@ func MapSunoStatus(sunoStatus string) string {
 	}
 }
 
-// GetStatusProgress 获取状态进度百分比
 func GetStatusProgress(status string) int {
 	switch status {
 	case "pending":
@@ -672,7 +666,7 @@ func (h *Handler) HealthCheck(c *gin.Context) {
 	})
 }
 
-// ============ LocalLibrary Handlers (方案B/C) ============
+// ============ LocalLibrary Handlers ============
 
 func (h *Handler) GetLocalSongs(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -858,7 +852,6 @@ func (h *Handler) RemoveSongFromPlaylist(c *gin.Context) {
 	response.SuccessWithMsg(c, "移除成功", nil)
 }
 
-// ImportSongs - 批量导入歌曲（方案C用，接收文件哈希+元数据）
 func (h *Handler) ImportSongs(c *gin.Context) {
 	var songs []model.LocalSong
 	if err := c.ShouldBindJSON(&songs); err != nil {
@@ -888,7 +881,6 @@ func (h *Handler) ImportSongs(c *gin.Context) {
 
 // ============ Player API Handlers ============
 
-// GetPlayerState 获取播放器状态
 func (h *Handler) GetPlayerState(c *gin.Context) {
 	userID := c.DefaultQuery("user_id", "default")
 	state, err := h.repo.GetPlayerState(userID)
@@ -897,11 +889,10 @@ func (h *Handler) GetPlayerState(c *gin.Context) {
 		return
 	}
 	if state == nil {
-		// 返回默认状态
 		response.Success(c, map[string]interface{}{
-			"user_id":     userID,
-			"source_type": "local",
-			"source_id":   "",
+			"user_id":      userID,
+			"source_type":  "local",
+			"source_id":    "",
 			"current_time": 0,
 			"volume":       0.8,
 			"is_playing":   false,
@@ -913,7 +904,6 @@ func (h *Handler) GetPlayerState(c *gin.Context) {
 	response.Success(c, state)
 }
 
-// SavePlayerState 保存播放器状态
 func (h *Handler) SavePlayerState(c *gin.Context) {
 	var state model.PlayerState
 	if err := c.ShouldBindJSON(&state); err != nil {
@@ -930,7 +920,6 @@ func (h *Handler) SavePlayerState(c *gin.Context) {
 	response.Success(c, state)
 }
 
-// GetPlayHistory 获取播放历史
 func (h *Handler) GetPlayHistory(c *gin.Context) {
 	userID := c.DefaultQuery("user_id", "default")
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
@@ -948,7 +937,6 @@ func (h *Handler) GetPlayHistory(c *gin.Context) {
 	})
 }
 
-// AddPlayHistory 添加播放历史
 func (h *Handler) AddPlayHistory(c *gin.Context) {
 	var entry model.PlayHistory
 	if err := c.ShouldBindJSON(&entry); err != nil {
@@ -965,7 +953,6 @@ func (h *Handler) AddPlayHistory(c *gin.Context) {
 	response.Success(c, entry)
 }
 
-// ClearPlayHistory 清除播放历史
 func (h *Handler) ClearPlayHistory(c *gin.Context) {
 	userID := c.DefaultQuery("user_id", "default")
 	if err := h.repo.ClearPlayHistory(userID); err != nil {
@@ -975,7 +962,6 @@ func (h *Handler) ClearPlayHistory(c *gin.Context) {
 	response.SuccessWithMsg(c, "清除成功", nil)
 }
 
-// GetFavorites 获取收藏列表
 func (h *Handler) GetFavorites(c *gin.Context) {
 	userID := c.DefaultQuery("user_id", "default")
 	songType := c.Query("type")
@@ -990,7 +976,6 @@ func (h *Handler) GetFavorites(c *gin.Context) {
 	})
 }
 
-// AddFavorite 添加收藏
 func (h *Handler) AddFavorite(c *gin.Context) {
 	var fav model.FavoriteSong
 	if err := c.ShouldBindJSON(&fav); err != nil {
@@ -1007,11 +992,10 @@ func (h *Handler) AddFavorite(c *gin.Context) {
 	response.Success(c, fav)
 }
 
-// RemoveFavorite 移除收藏
 func (h *Handler) RemoveFavorite(c *gin.Context) {
 	var params struct {
-		UserID  string `json:"user_id"`
-		SongID  string `json:"song_id"`
+		UserID   string `json:"user_id"`
+		SongID   string `json:"song_id"`
 		SongType string `json:"song_type"`
 	}
 	if err := c.ShouldBindJSON(&params); err != nil {
@@ -1029,7 +1013,6 @@ func (h *Handler) RemoveFavorite(c *gin.Context) {
 	response.SuccessWithMsg(c, "移除成功", nil)
 }
 
-// CheckFavorite 检查是否已收藏
 func (h *Handler) CheckFavorite(c *gin.Context) {
 	userID := c.DefaultQuery("user_id", "default")
 	songID := c.Query("song_id")
@@ -1044,7 +1027,6 @@ func (h *Handler) CheckFavorite(c *gin.Context) {
 	})
 }
 
-// SearchSongs 搜索歌曲
 func (h *Handler) SearchSongs(c *gin.Context) {
 	query := c.Query("q")
 	if query == "" {

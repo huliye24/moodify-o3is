@@ -227,7 +227,7 @@ func (r *Repository) GetApiLogsByModel(modelName string, limit int) ([]model.Api
 	return logs, err
 }
 
-// ============ LocalLibrary CRUD (方案B/C) ============
+// ============ LocalLibrary CRUD ============
 
 // Artist
 func (r *Repository) CreateOrGetArtist(name string) (*model.LocalArtist, error) {
@@ -339,10 +339,10 @@ func (r *Repository) AddSongToPlaylist(playlistID, songID string) error {
 	var count int64
 	r.db.Model(&model.LocalPlaylistSong{}).Where("playlist_id = ?", playlistID).Count(&count)
 	ps := model.LocalPlaylistSong{
-		ID: fmt.Sprintf("%s-%s", playlistID, songID),
-		PlaylistID: playlistID,
-		SongID: songID,
-		Position: int(count),
+		ID:          fmt.Sprintf("%s-%s", playlistID, songID),
+		PlaylistID:  playlistID,
+		SongID:      songID,
+		Position:    int(count),
 	}
 	return r.db.FirstOrCreate(&ps, model.LocalPlaylistSong{PlaylistID: playlistID, SongID: songID}).Error
 }
@@ -351,9 +351,32 @@ func (r *Repository) RemoveSongFromPlaylist(playlistID, songID string) error {
 	return r.db.Delete(&model.LocalPlaylistSong{}, "playlist_id = ? AND song_id = ?", playlistID, songID).Error
 }
 
+// SearchLocalSongs 搜索歌曲
+func (r *Repository) SearchLocalSongs(query string, page, pageSize int) ([]model.LocalSong, int64, error) {
+	var songs []model.LocalSong
+	var total int64
+
+	searchQuery := "%" + query + "%"
+	q := r.db.Model(&model.LocalSong{}).
+		Where("title LIKE ? OR artist_name LIKE ? OR album_name LIKE ? OR genre LIKE ?",
+			searchQuery, searchQuery, searchQuery, searchQuery)
+
+	q.Count(&total)
+	offset := (page - 1) * pageSize
+	err := q.Order("created_at desc").Offset(offset).Limit(pageSize).Find(&songs).Error
+
+	return songs, total, err
+}
+
+// GetRandomLocalSongs 获取随机歌曲
+func (r *Repository) GetRandomLocalSongs(count int) ([]model.LocalSong, error) {
+	var songs []model.LocalSong
+	err := r.db.Order("RANDOM()").Limit(count).Find(&songs).Error
+	return songs, err
+}
+
 // ============ Player Repository Methods ============
 
-// PlayerState
 func (r *Repository) GetPlayerState(userID string) (*model.PlayerState, error) {
 	var state model.PlayerState
 	err := r.db.Where("user_id = ?", userID).First(&state).Error
@@ -364,7 +387,6 @@ func (r *Repository) GetPlayerState(userID string) (*model.PlayerState, error) {
 }
 
 func (r *Repository) SavePlayerState(state *model.PlayerState) error {
-	// 先尝试更新
 	result := r.db.Where("user_id = ?", state.UserID).Updates(map[string]interface{}{
 		"source_type":  state.SourceType,
 		"source_id":    state.SourceID,
@@ -375,13 +397,11 @@ func (r *Repository) SavePlayerState(state *model.PlayerState) error {
 		"shuffle":      state.Shuffle,
 	})
 	if result.RowsAffected == 0 {
-		// 没有记录，创建一个
 		return r.db.Create(state).Error
 	}
 	return result.Error
 }
 
-// PlayHistory
 func (r *Repository) GetPlayHistory(userID string, limit int) ([]model.PlayHistory, error) {
 	var history []model.PlayHistory
 	err := r.db.Where("user_id = ?", userID).
@@ -392,11 +412,9 @@ func (r *Repository) GetPlayHistory(userID string, limit int) ([]model.PlayHisto
 }
 
 func (r *Repository) AddPlayHistory(entry *model.PlayHistory) error {
-	// 限制历史记录数量，最多保留 500 条
 	var count int64
 	r.db.Model(&model.PlayHistory{}).Where("user_id = ?", entry.UserID).Count(&count)
 	if count >= 500 {
-		// 删除最老的记录
 		r.db.Where("user_id = ? AND id IN (SELECT id FROM play_history WHERE user_id = ? ORDER BY played_at ASC LIMIT ?)",
 			entry.UserID, entry.UserID, count-400).Delete(&model.PlayHistory{})
 	}
@@ -407,7 +425,6 @@ func (r *Repository) ClearPlayHistory(userID string) error {
 	return r.db.Where("user_id = ?", userID).Delete(&model.PlayHistory{}).Error
 }
 
-// Favorites
 func (r *Repository) GetFavorites(userID, songType string) ([]model.FavoriteSong, error) {
 	var favorites []model.FavoriteSong
 	query := r.db.Where("user_id = ?", userID)
@@ -419,11 +436,10 @@ func (r *Repository) GetFavorites(userID, songType string) ([]model.FavoriteSong
 }
 
 func (r *Repository) AddFavorite(fav *model.FavoriteSong) error {
-	// 检查是否已存在
 	var existing model.FavoriteSong
 	err := r.db.Where("user_id = ? AND song_id = ? AND song_type = ?", fav.UserID, fav.SongID, fav.SongType).First(&existing).Error
 	if err == nil {
-		return nil // 已存在
+		return nil
 	}
 	if err != gorm.ErrRecordNotFound {
 		return err
@@ -443,7 +459,6 @@ func (r *Repository) IsFavorite(userID, songID, songType string) (bool, error) {
 	return count > 0, err
 }
 
-// Search
 func (r *Repository) SearchSongs(query string, page, pageSize int) ([]model.LocalSong, int64, error) {
 	var songs []model.LocalSong
 	var total int64

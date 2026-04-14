@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"backend/internal/config"
 	"backend/internal/handler"
+	"backend/internal/library"
 	"backend/internal/middleware"
 	"backend/internal/model"
 	"backend/internal/repository"
@@ -20,16 +22,23 @@ import (
 func main() {
 	cfg := config.LoadConfig()
 
+	// 确保数据目录存在
 	if err := os.MkdirAll("./data", 0755); err != nil {
 		log.Fatalf("创建数据目录失败: %v", err)
 	}
 
-	db, err := gorm.Open(sqlite.Open(cfg.Database.Path), &gorm.Config{})
+	// 获取数据库路径的绝对路径
+	dbPath, _ := filepath.Abs(cfg.Database.Path)
+	log.Printf("数据库路径: %s", dbPath)
+
+	// 使用纯 Go 的 SQLite 驱动 (modernc.org/sqlite)
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("数据库连接失败: %v", err)
 	}
-	log.Printf("数据库连接成功，路径: %s", cfg.Database.Path)
+	log.Printf("数据库连接成功")
 
+	// 自动迁移
 	if err := db.AutoMigrate(
 		&model.Project{},
 		&model.O3ics{},
@@ -51,6 +60,11 @@ func main() {
 
 	repo := repository.NewRepository(db)
 	o3icsService := service.NewO3icsService(repo, cfg)
+
+	// 初始化音乐库服务
+	libraryService := library.NewLibraryService(repo, "./data")
+	libHandler := library.NewHandler(libraryService, repo)
+
 	h := handler.NewHandler(repo, o3icsService, cfg)
 
 	gin.SetMode(cfg.Server.Mode)
@@ -117,7 +131,7 @@ func main() {
 			suno.POST("/fetch", h.SunoFetch)
 		}
 
-		// 本地音乐库（方案B/C）
+		// 本地音乐库
 		localSongs := api.Group("/local-songs")
 		{
 			localSongs.GET("", h.GetLocalSongs)
@@ -162,6 +176,16 @@ func main() {
 			player.DELETE("/favorites", h.RemoveFavorite)
 			player.GET("/favorites/check", h.CheckFavorite)
 			player.GET("/search", h.SearchSongs)
+		}
+
+		// 音乐库扫描 API
+		library := api.Group("/library")
+		{
+			library.POST("/scan", libHandler.ScanLibrary)                    // 扫描并导入
+			library.GET("/scan", libHandler.GetScanResult)                   // 预览扫描结果
+			library.GET("/metadata", libHandler.GetAudioMetadata)           // 获取元数据
+			library.GET("/stats", libHandler.GetStats)                       // 获取统计
+			library.GET("/formats", libHandler.GetSupportedFormats)        // 获取支持的格式
 		}
 
 		api.GET("/options", h.GetOptions)

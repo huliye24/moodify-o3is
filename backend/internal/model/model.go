@@ -167,7 +167,7 @@ type SunoFetchResponse struct {
 	Tasks []SunoTask `json:"tasks"`
 }
 
-// ============ LocalLibrary Models (方案B/C) ============
+// ============ LocalLibrary Models ============
 
 type LocalArtist struct {
 	BaseModel
@@ -230,7 +230,6 @@ type LocalPlaylistSong struct {
 
 // ============ Player Models ============
 
-// PlayerState 播放器状态
 type PlayerState struct {
 	BaseModel
 	UserID      string `gorm:"type:varchar(36)" json:"user_id"`
@@ -243,7 +242,6 @@ type PlayerState struct {
 	Shuffle     bool   `gorm:"default:false" json:"shuffle"`
 }
 
-// PlayHistory 播放历史
 type PlayHistory struct {
 	BaseModel
 	UserID    string `gorm:"type:varchar(36)" json:"user_id"`
@@ -255,7 +253,6 @@ type PlayHistory struct {
 	PlayedAt  int64  `json:"played_at"`
 }
 
-// FavoriteSong 收藏歌曲
 type FavoriteSong struct {
 	BaseModel
 	UserID    string `gorm:"type:varchar(36)" json:"user_id"`
