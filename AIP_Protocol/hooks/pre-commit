@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+# pre-commit hook for AIP Protocol
+# 运行任务和决策验证
+#
+# 安装方法: 将此文件复制到 .git/hooks/pre-commit
+#
+
+echo "🔍 AIP Protocol: 运行 pre-commit 验证..."
+
+# 切换到仓库根目录
+REPO_DIR="$(git rev-parse --show-toplevel)"
+cd "$REPO_DIR"
+
+# 验证任务文件
+echo "📋 验证任务文件..."
+node AIP_Protocol/tools/validate-tasks.js
+if [ $? -ne 0 ]; then
+    echo "❌ 任务文件验证失败"
+    exit 1
+fi
+
+# 验证决策文件
+echo "📋 验证决策文件..."
+node AIP_Protocol/tools/validate-decisions.js
+if [ $? -ne 0 ]; then
+    echo "❌ 决策文件验证失败"
+    exit 1
+fi
+
+echo "✅ pre-commit 验证通过"
+exit 0

@@ -1,0 +1,8 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\.md\shell\NewMarkdown]
+@="新建 Markdown 文件"
+"Icon"="imageres.dll,104"
+
+[HKEY_CLASSES_ROOT\.md\shell\NewMarkdown\command]
+@="cmd /c powershell -command \"cd '%1'; $f=Get-Date -Format 'yyyyMMdd_HHmmss'; New-Item ($f+'.md') -ItemType File; Start explorer /select,(Get-Item ($f+'.md')).FullName\""

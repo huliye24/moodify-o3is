@@ -1,0 +1,28 @@
+#!/bin/sh
+#
+# commit-msg hook for AIP Protocol
+# 自动更新决策索引
+#
+# 安装方法: 将此文件复制到 .git/hooks/commit-msg
+#
+
+echo "📝 AIP Protocol: 更新决策索引..."
+
+# 切换到仓库根目录
+REPO_DIR="$(git rev-parse --show-toplevel)"
+cd "$REPO_DIR"
+
+# 更新决策索引
+node AIP_Protocol/tools/update-decision-index.js
+if [ $? -ne 0 ]; then
+    echo "⚠️ 决策索引更新失败，但不影响提交"
+fi
+
+# 更新仪表盘
+node AIP_Protocol/tools/update-dashboard.js
+if [ $? -ne 0 ]; then
+    echo "⚠️ 仪表盘更新失败，但不影响提交"
+fi
+
+echo "✅ commit-msg hook 完成"
+exit 0

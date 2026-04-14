@@ -1,0 +1,156 @@
+{
+  "$schema": "https://nodenet.schema.moodify/",
+  "name": "Moodify",
+  "version": "1.0.0",
+  "description": "Moodify NodeNet 架构配置 — 软件开发的本质是对结构进行分形拆解，使所有改动收敛到最小单元，从而实现系统稳定与可演化。",
+
+  "architecture": {
+    "model": "NodeNet",
+    "layers": {
+      "L1_structure": {
+        "layer_name": "结构层 (UI Layer)",
+        "path": "src/components/",
+        "status": "LOCKED",
+        "description": "定义'是什么'，不定义'怎么做'。JSX结构、props接口永久锁定，AI只能调整样式。",
+        "ai_permission": ["style", "color", "css", "className"],
+        "ai_forbidden": ["jsx_structure", "props_interface", "state_logic", "component_relations"]
+      },
+      "L2_logic": {
+        "layer_name": "逻辑层 (Node Layer)",
+        "path": "src/hooks/",
+        "status": "LOGIC_ONLY",
+        "description": "定义'怎么做'。AI只允许修改Node内部逻辑，禁止跨Node修改。",
+        "ai_permission": ["logic", "data_processing", "api_call", "state_management"],
+        "ai_forbidden": ["cross_node_modification", "import_structure", "component_creation"]
+      },
+      "L3_config": {
+        "layer_name": "配置层 (Flow Layer)",
+        "path": "ports.json",
+        "status": "CONFIG_DRIVEN",
+        "description": "定义'用什么配置'。配置驱动，不硬编码，改流程不改代码。"
+      }
+    },
+    "collaboration": {
+      "human": "结构设计 — 决定有哪些Node，上层如何组合下层",
+      "ai": "逻辑实现 — 实现Node内部的process()逻辑",
+      "config": "参数驱动 — JSON配置管理"
+    }
+  },
+
+  "nodes": {
+    "useProject": {
+      "name": "项目节点",
+      "layer": "L2",
+      "path": "src/hooks/useProject.ts",
+      "input": "项目名称（string）",
+      "process": "创建/查询项目",
+      "output": "项目列表（Project[]）"
+    },
+    "useO3ics": {
+      "name": "歌词创作节点",
+      "layer": "L2",
+      "path": "src/hooks/useO3ics.ts",
+      "input": "content(string) + params(Emotion/Theme/Style)",
+      "process": "调用API生成歌词",
+      "output": "歌词数据 + Suno提示词"
+    },
+    "useRules": {
+      "name": "规则引擎节点",
+      "layer": "L2",
+      "path": "src/hooks/useRules.ts",
+      "input": "选中的规则类型[]",
+      "process": "加载规则列表",
+      "output": "规则配置（用于生成提示词）"
+    },
+    "useDice": {
+      "name": "骰子节点",
+      "layer": "L2",
+      "path": "src/hooks/useDice.ts",
+      "input": "无",
+      "process": "随机生成创作参数",
+      "output": "{ closing_style, perspective, rhetoric, ... }"
+    },
+    "useMoodPlayer": {
+      "name": "情绪播放节点",
+      "layer": "L2",
+      "path": "src/hooks/useMoodPlayer.ts",
+      "input": "选中的情绪（string）",
+      "process": "播放匹配的音频",
+      "output": "播放状态（playing/paused/stopped）"
+    },
+    "useLibrary": {
+      "name": "本地乐库节点",
+      "layer": "L2",
+      "path": "src/stores/useLibraryStore.ts",
+      "input": "扫描路径（string）",
+      "process": "扫描本地音乐文件",
+      "output": "音乐列表 + 歌手/专辑分类"
+    }
+  },
+
+  "flow": {
+    "frontend": 3000,
+    "backend": 3001
+  },
+
+  "rules": [
+    {
+      "id": "RULE_L1_LOCK",
+      "priority": "CRITICAL",
+      "name": "结构锁定规则",
+      "description": "禁止修改 src/components/ 下的 JSX 结构、props 接口。只允许样式调整。",
+      "pattern": "src/components/**/*.{tsx,jsx}",
+      "action": "FORBIDDEN"
+    },
+    {
+      "id": "RULE_L2_SOLO",
+      "priority": "HIGH",
+      "name": "单节点修改规则",
+      "description": "一次只修改一个Node文件，不跨Node修改逻辑。",
+      "pattern": "src/hooks/*.ts",
+      "action": "CONSTRAIN"
+    },
+    {
+      "id": "RULE_L2_NO_CROSS",
+      "priority": "HIGH",
+      "name": "禁止跨节点规则",
+      "description": "禁止在NodeA���修改NodeB的逻辑。每个Node独立，边界清晰。",
+      "pattern": "src/hooks/*.ts",
+      "action": "FORBIDDEN"
+    },
+    {
+      "id": "RULE_L3_CONFIG",
+      "priority": "MEDIUM",
+      "name": "配置驱动规则",
+      "description": "端口、流程等配置统一在 ports.json 中管理，不硬编码。",
+      "pattern": "*",
+      "action": "ENFORCE"
+    }
+  ],
+
+  "ai_prompts": {
+    "modify_logic": "只修改 {node} 的 process() 逻辑。输入：{input}。输出：{output}。不要修改其他文件，不要修改组件结构。",
+    "modify_style": "只修改 src/index.css 中的颜色和样式。不要修改组件的 HTML 结构。",
+    "add_feature": "新增功能请在 src/hooks/ 下创建新的 Node 文件，遵循 input() → process() → output() 规范。不要修改现有组件的 JSX 结构。"
+  },
+
+  "fractal_split": {
+    "principle": "一个Node满足以下全部条件时才拆分：1.有独立的输入 2.有独立的输出 3.可以独立测试 4.有明确的边界",
+    "收益": "修改只发生在叶子节点，不会影响上层结构"
+  },
+
+  "human_ai_division": {
+    "human_role": "结构设计 — 决定有哪些Node，上层如何组合下层",
+    "ai_role": "逻辑实现 — 实现Node内部的process()逻辑",
+    "config_role": "参数驱动 — JSON配置管理"
+  },
+
+  "core_principle": "人负责切分结构，AI负责填充细节，所有改动收敛到叶子节点。",
+
+  "ports": {
+    "frontend": 3000,
+    "backend": 3001,
+    "electron_player": 3002,
+    "electron_web": 3003
+  }
+}

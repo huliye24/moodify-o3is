@@ -1,0 +1,76 @@
+# 全局约束契约
+
+此文件定义 Moodify 项目的硬性约束条件，所有技术决策必须遵守。
+
+```yaml
+# contracts/global-constraints.yaml
+
+constraints:
+  # 平台约束
+  platform:
+    min_node_version: "18.0.0"
+    max_memory_mb: 2048
+    min_disk_space_gb: 10
+
+  # 代码质量约束
+  code_quality:
+    typescript_strict: true
+    test_coverage_min: 0.70
+    lint_enabled: true
+    no_console_log_in_prod: true
+
+  # 性能约束
+  performance:
+    cold_start_ms: 3000
+    hot_reload_ms: 100
+    api_response_p99_ms: 200
+    ui_render_fps: 60
+
+  # 数据约束
+  data:
+    max_project_count: 1000
+    max_lyrics_per_project: 500
+    max_rule_count: 200
+    library_size_limit_gb: 100
+
+  # 安全约束
+  security:
+    api_keys_never_log: true
+    local_data_only: true
+    no_telemetry: true
+
+  # 用户体验约束
+  ux:
+    keyboard_shortcuts_required: true
+    offline_mode_required: true
+    accessibility_a11y: true
+```
+
+## 约束等级
+
+| 等级 | 说明 | 违反后果 |
+|------|------|----------|
+| **CRITICAL** | 不可违反，架构级 | 任务阻塞，需立即修复 |
+| **HIGH** | 应尽量避免 | 需记录原因并评审 |
+| **MEDIUM** | 建议遵守 | 可在特殊情况下豁免 |
+| **LOW** | 最佳实践 | 灵活处理 |
+
+## 约束检查点
+
+每个 PR/MR 必须通过：
+
+- [ ] 代码风格检查
+- [ ] TypeScript 类型检查
+- [ ] 单元测试通过
+- [ ] 性能基准测试
+- [ ] 约束合规性验证
+
+运行验证：
+
+```bash
+node tools/validate-constraints.js
+```
+
+---
+
+> 此文件由 AIP 协议管理，修改需经过正式评审。

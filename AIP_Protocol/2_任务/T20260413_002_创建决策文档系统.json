@@ -1,0 +1,36 @@
+{
+  "task_id": "T20260413_002",
+  "title": "创建决策文档系统",
+  "description": "基于 Moodify 现有决策文档，创建标准化的决策追踪系统，包括 D000-D005 核心决策，以及决策索引和契约文件。",
+  "type": "feature",
+  "tech_node": "R0",
+  "priority": "P0",
+  "status": "completed",
+  "created_at": "2026-04-13T11:00:00Z",
+  "completed_at": "2026-04-14T10:30:00Z",
+  "assignee": "AI Assistant",
+  "preconditions": ["T20260413_001"],
+  "postconditions": [],
+  "acceptance_criteria": [
+    "决策文档 D000-D005 已创建或迁移",
+    "决策索引 INDEX.md 已生成",
+    "契约文件 contracts/ 已就绪"
+  ],
+  "dependencies": [],
+  "files_modified": [
+    "decisions/D000-core-vision.md",
+    "decisions/D001-tech-stack.md",
+    "decisions/D002-architecture-pattern.md",
+    "decisions/D003-data-strategy.md",
+    "decisions/D004-deployment-model.md",
+    "decisions/D005-evolution-plan.md",
+    "decisions/D006-nodenet-methodology.md",
+    "decisions/D007-fractal-tree.md",
+    "decisions/D008-nodesplit-rules.md",
+    "decisions/INDEX.md",
+    "contracts/global-constraints.yaml",
+    "contracts/performance.yaml",
+    "contracts/api-contracts.yaml"
+  ],
+  "notes": "任务已完成：\n1. 将 decisions/ 目录下的 D000-D008 共 9 个决策文档迁移到 AIP_Protocol/0_决策/ 目录\n2. 决策文档包括：核心愿景、技术栈选择、架构模式、数据策略、部署模式、演进计划、NodeNet方法论、分形结构树、NodeSplit架构规则\n3. 创建了 AIP_Protocol/0_决策/INDEX.md 决策索引，按状态分类显示\n4. 所有决策文档状态为 approved，日期为 2026-04-13\n5. 任务路径完成从 decisions/ 到 AIP_Protocol/0_决策/ 的标准化迁移"
+}

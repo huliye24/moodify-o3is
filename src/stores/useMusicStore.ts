@@ -23,7 +23,7 @@ interface MusicState {
   // 操作
   setPlaylist: (tracks: MusicTrack[]) => void
   addToPlaylist: (track: MusicTrack) => void
-  removeFromPlaylist: (trackId: number) => void
+  removeFromPlaylist: (trackId: string) => void
   setCurrentTrack: (track: MusicTrack | null) => void
   setQueue: (tracks: MusicTrack[]) => void
   addToQueue: (track: MusicTrack) => void
@@ -67,7 +67,7 @@ export const useMusicStore = create<MusicState>((set) => ({
     playlist: [track, ...state.playlist]
   })),
 
-  removeFromPlaylist: (trackId) => set((state) => ({
+  removeFromPlaylist: (trackId: string) => set((state) => ({
     playlist: state.playlist.filter(t => t.id !== trackId),
     currentTrack: state.currentTrack?.id === trackId ? null : state.currentTrack
   })),

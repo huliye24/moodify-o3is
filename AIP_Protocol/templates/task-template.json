@@ -1,0 +1,153 @@
+# AIP 协议示例任务模板
+
+```json
+{
+  "task_id": "T20260413_999",
+  "title": "任务标题 - 简明扼要",
+  "description": "详细描述要做什么、为什么做、预期效果",
+  "type": "feature",                    // feature|bugfix|docs|refactor|test|chore
+  "tech_node": "R0",                    // 所属技术节点
+  "priority": "P0",                     // P0(最高)-P3(最低)
+  "status": "pending",                  // pending|in_progress|completed|blocked
+  "created_at": "2026-04-13T10:00:00Z", // ISO 8601
+  "completed_at": null,                 // ISO 8601 或 null
+  "assignee": "AI Assistant",           // 执行者
+  "preconditions": [],                  // 前置任务 ID 列表
+  "postconditions": [],                 // 后置任务 ID 列表
+  "acceptance_criteria": [
+    "标准1：具体、可验证",
+    "标准2：通过测试",
+    "标准3：性能达标"
+  ],
+  "dependencies": [],                   // 依赖的外部任务/资源
+  "files_modified": [
+    "src/hooks/useProject.ts"
+  ],
+  "notes": "执行过程中的备注、遇到的问题、解决方案"
+}
+```
+
+## 字段说明
+
+### 必填字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `task_id` | string | 唯一标识，格式：TYYYYMMDD_NNN 或 TYYYYMMDD_NNN_描述 |
+| `title` | string | 任务标题，不超过 50 字 |
+| `description` | string | 详细描述（Markdown 支持） |
+| `type` | string | 任务类型 |
+| `tech_node` | string | 技术节点标识 |
+| `priority` | string | 优先级 P0-P3 |
+| `status` | string | 当前状态 |
+| `created_at` | string | 创建时间（ISO 8601） |
+| `assignee` | string | 负责人 |
+
+### 可选字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `completed_at` | string | 完成时间 |
+| `preconditions` | array | 前置条件 |
+| `postconditions` | array | 后置条件 |
+| `acceptance_criteria` | array | 验收标准 |
+| `dependencies` | array | 依赖项 |
+| `files_modified` | array | 修改的文件 |
+| `notes` | string | 备注 |
+
+## 任务 ID 生成规则
+
+```
+格式：T{YYYYMMDD}_{序号}_{可选描述}
+
+示例：
+T20260413_001              # 第一号任务
+T20260413_002_初始化目录     # 带描述
+T20260414_003_修复登录bug    # 跨天的任务
+```
+
+**规则**：
+- 日期：任务创建日期
+- 序号：当天任务序号（从 001 开始）
+- 描述：蛇形命名，简短说明
+
+## 状态流转
+
+```
+pending → in_progress → completed
+    ↓
+blocked（遇到阻塞）
+    ↓
+pending（问题解决后继续）
+```
+
+## 任务类型（type）
+
+| 类型 | 说明 | 示例 |
+|------|------|------|
+| `feature` | 新功能 | 实现项目创建 |
+| `bugfix` | Bug 修复 | 修复登录失败 |
+| `docs` | 文档编写 | 更新 README |
+| `refactor` | 重构优化 | 重构 useProject |
+| `test` | 测试相关 | 添加单元测试 |
+| `chore` | 维护任务 | 升级依赖版本 |
+
+## 技术节点（tech_node）
+
+对应 `1_roadmap/` 中的节点：
+
+| 节点 | 说明 |
+|------|------|
+| `R0` | 协议核心结构 |
+| `R1` | 任务 JSON Schema |
+| `R2` | 自检钩子 |
+| `R3` | 示例项目验证 |
+| `backend` | Go 后端 |
+| `frontend` | 前端开发 |
+| `bugfix` | Bug 修复 |
+| `docs` | 文档 |
+| `refactor` | 重构 |
+
+## 优先级（priority）
+
+| 优先级 | 说明 | 建议耗时 |
+|--------|------|----------|
+| `P0` | 紧急，阻塞性 | < 4 小时 |
+| `P1` | 高优先级 | < 1 天 |
+| `P2` | 中等 | < 3 天 |
+| `P3` | 低优先级 | 可延期 |
+
+## 验收标准编写
+
+✅ **好的标准**：
+```
+- 能创建项目并保存到数据库
+- 项目名称重复时提示用户
+- 创建成功后自动选中新项目
+- 有加载状态和错误处理
+```
+
+❌ **坏的标准**：
+```
+- 实现项目创建功能（太模糊）
+```
+
+## 快速创建任务
+
+```bash
+# 1. 复制模板
+cp templates/task-template.json 2_任务/T20260413_999_新任务.json
+
+# 2. 编辑文件
+vim 2_任务/T20260413_999_新任务.json
+
+# 3. 验证格式
+node tools/validate-tasks.js
+
+# 4. 更新仪表盘
+node tools/update-dashboard.js
+```
+
+---
+
+**任务是一天的工作，里程碑是一个月的目标，愿景是一生的方向。**

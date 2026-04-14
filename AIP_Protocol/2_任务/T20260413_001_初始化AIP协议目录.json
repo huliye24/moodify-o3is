@@ -1,0 +1,28 @@
+{
+  "task_id": "T20260413_001",
+  "title": "初始化 AIP 协议目录结构",
+  "description": "创建 AIP 协议标准目录结构，包括 0_决策、1_roadmap、2_任务、3_共享、contracts、docs、tools、examples 等子目录，并初始化 README 文件。",
+  "type": "feature",
+  "tech_node": "R0",
+  "priority": "P0",
+  "status": "completed",
+  "created_at": "2026-04-13T10:00:00Z",
+  "completed_at": "2026-04-13T10:30:00Z",
+  "assignee": "AI Assistant",
+  "preconditions": [],
+  "postconditions": ["T20260413_002"],
+  "acceptance_criteria": [
+    "AIP_Protocol/ 目录结构完整",
+    "所有子目录已创建",
+    "README.md 文件齐全"
+  ],
+  "dependencies": [],
+  "files_modified": [
+    "AIP_Protocol/0_决策/README.md",
+    "AIP_Protocol/1_roadmap/README.md",
+    "AIP_Protocol/2_任务/README.md",
+    "AIP_Protocol/3_共享/README.md",
+    "AIP_Protocol/目录结构.md"
+  ],
+  "notes": "已完成目录结构创建和基础 README 编写。"
+}

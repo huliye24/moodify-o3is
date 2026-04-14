@@ -1,0 +1,78 @@
+# 全局约束契约
+
+> 约束类型: global
+> 版本: 1.0.0
+> 最后更新: 2026-04-13
+
+## 性能约束
+
+```yaml
+performance:
+  frontend:
+    cold_start_ms: 3000
+    hot_reload_ms: 100
+    memory_max_mb: 512
+    bundle_size_mb: 150
+    
+  backend:
+    api_response_p99_ms: 200
+    db_query_ms: 50
+    max_concurrent_requests: 100
+    
+  desktop:
+    startup_time_ms: 5000
+    idle_memory_mb: 200
+    max_memory_mb: 1024
+```
+
+## 可靠性约束
+
+```yaml
+reliability:
+  uptime: 0.99        # 99% 可用性
+  crash_free_rate: 0.999
+  error_rate_max: 0.001
+  
+  error_budget:
+    weekly_downtime_minutes: 10
+    monthly_bugs: 5
+```
+
+## 安全约束
+
+```yaml
+security:
+  data_storage: "local_only"
+  cloud_upload: false     # 默认不上传
+  encryption: "optional"
+  audit_log: true
+```
+
+## 兼容性约束
+
+```yaml
+compatibility:
+  nodejs: ">=18"
+  go: ">=1.21"
+  python: ">=3.10"
+  
+  platforms:
+    windows: ">=10"
+    macos: ">=12"
+    linux: ">=20"
+```
+
+## 功能约束
+
+```yaml
+features:
+  offline_support: true
+  auto_update: true
+  auto_backup: false     # 可选功能
+  
+  limits:
+    max_projects: 1000
+    max_songs_per_project: 100
+    max_lyrics_length: 10000
+    max_file_upload_mb: 100
+```

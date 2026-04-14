@@ -1,0 +1,10 @@
+feat: 统一三个Tab界面UI配色为情绪色体系
+
+- 重构CSS组件类(btn-primary/secondary, input-field, card)使用rgba(107,122,143)情绪色
+- MainContent: 歌词创作界面全面改用内联样式+情绪色配色
+- Sidebar: 侧边栏统一为情绪色背景/边框/文字
+- SettingsModal/RulesModal/MusicPanel: 弹窗配色统一
+- AppTabLayout: Tab导航边框与配色统一
+- types/index.ts: 添加rules API类型定义
+- stores/useMoodStore.ts: 修复skipPrev中缺少currentIndex
+- 去掉歌词界面"请先创建项目"的限制提示条
