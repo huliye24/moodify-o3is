@@ -124,13 +124,13 @@ export const useLibraryStore = create<LibraryState>()(
 
       updateSong: async (id, updates) => {
         if (!window.api) return
-        try { await window.api.http.post(`/api/v1/local-songs/${id}`, updates) } catch {}
+        try { await window.api.http.put(`/api/v1/local-songs/${id}`, updates) } catch {}
         await get().loadSongs()
       },
 
       deleteSong: async (id) => {
         if (!window.api) return
-        try { await window.api.http.post(`/api/v1/local-songs/${id}`) } catch {}
+        try { await window.api.http.delete(`/api/v1/local-songs/${id}`) } catch {}
         await get().loadSongs()
       },
 

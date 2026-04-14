@@ -1,13 +1,11 @@
-// 方案C：文件系统 + Go 内存索引视图
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Music, FolderOpen, Heart, Play, Trash2, Search, RefreshCw, Loader2, HardDrive } from 'lucide-react'
 import { useAuroraTheme } from '../../context/ThemeContext'
-import type { ScannedFile } from '../../types/library'
+import type { LocalSong } from '../../types/library'
 
 export default function FileSystemView() {
   const { theme } = useAuroraTheme()
-  const [songs, setSongs] = useState<any[]>([])
-  const [scannedFiles, setScannedFiles] = useState<ScannedFile[]>([])
+  const [songs, setSongs] = useState<LocalSong[]>([])
   const [loading, setLoading] = useState(false)
   const [scanning, setScanning] = useState(false)
   const [libraryPath, setLibraryPath] = useState('')
@@ -17,103 +15,70 @@ export default function FileSystemView() {
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [stats, setStats] = useState<any>({ totalFiles: 0, totalSize: 0, counts: {} })
+  const [stats, setStats] = useState({ totalSongs: 0, totalArtists: 0, totalAlbums: 0 })
 
-  const loadSongs = async () => {
+  const loadSongs = useCallback(async () => {
     setLoading(true)
     try {
       if (!window.api) { setSongs([]); setLoading(false); return }
       const res = await window.api.http.get('/api/v1/local-songs?page_size=500')
       const data = res?.data?.songs || res?.songs || []
-      setSongs(data)
+      setSongs(data as LocalSong[])
     } catch (err) {
       console.warn('加载歌曲失败:', err)
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
+    if (!window.api?.library) return
     try {
-      if (!window.api) return
-      const s = await window.api.library.getLibraryStats()
-      if (s) {
-        setStats(s)
-        setLibraryPath(s.root || '')
+      const res = await window.api.library.getLibraryStats()
+      const data = res?.data
+      if (data) {
+        setStats({
+          totalSongs: data.total_songs || 0,
+          totalArtists: data.total_artists || 0,
+          totalAlbums: data.total_albums || 0,
+        })
       }
     } catch (err) {
       console.warn('加载统计失败:', err)
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadSongs()
     loadStats()
-  }, [])
+  }, [loadSongs, loadStats])
 
   const handleSelectFolder = async () => {
-    if (!window.api) {
-      console.error('window.api 不可用，请确保 Electron 应用正在运行')
+    if (!window.api?.library) {
+      console.error('window.api.library 不可用，请确保 Electron 应用正在运行')
       return
     }
     try {
-      console.log('正在打开文件夹选择对话框...')
       const folder = await window.api.library.openFolder()
-      console.log('选择的文件夹:', folder)
-      if (!folder) {
-        console.log('用户取消了选择')
-        return
-      }
+      if (!folder) return
       setLibraryPath(folder)
-      console.log('开始扫描文件夹:', folder)
       await scanFolder(folder)
     } catch (err) {
       console.error('选择文件夹失败:', err)
     }
   }
 
-  const scanFolder = async (folder?: string) => {
-    const target = folder || libraryPath
-    if (!target || !window.api) return
+  const scanFolder = async (folder: string) => {
+    if (!window.api?.library) return
     setScanning(true)
     try {
-      const files: ScannedFile[] = await window.api.library.scanFolder(target)
-      setScannedFiles(files)
-
-      const songsWithMeta = await Promise.all(
-        files.map(async (file) => {
-          try {
-            const meta = await window.api.library.getAudioMetadata(file.path)
-            return { ...file, ...meta }
-          } catch {
-            return file
-          }
-        })
-      )
-
-      // 3. 批量导入到数据库
-      const importPayload = songsWithMeta.map((f: any) => ({
-        title: f.title || f.name.replace(/\.[^.]+$/, ''),
-        artist_name: f.artist || '',
-        album_name: f.album || '',
-        audio_path: f.path,
-        file_hash: f.hash || '',
-        duration: f.duration || 0,
-        favorite: false,
-        play_count: 0,
-      }))
-
-      try {
-        await window.api.http.post('/api/v1/local-songs/import', importPayload)
-      } catch (err) {
-        // 如果批量导入失败，尝试逐个添加
-        for (const s of importPayload) {
-          try {
-            await window.api.http.post('/api/v1/local-songs', s)
-          } catch {}
-        }
+      // 调用后端 API：扫描 + 元数据提取 + 导入，一条龙完成
+      const res = await window.api.library.scanFolder(folder)
+      if (res?.code === 0) {
+        const data = res.data as { scanned?: number; imported?: number; songs?: LocalSong[] }
+        console.log(`扫描完成：共 ${data.scanned} 首，导入了 ${data.imported} 首`)
       }
-
+      // 重新加载歌曲列表（后端已导入，直接查库）
       await loadSongs()
       await loadStats()
     } catch (err) {
@@ -123,7 +88,7 @@ export default function FileSystemView() {
     }
   }
 
-  const handleDelete = async (song: any) => {
+  const handleDelete = async (song: LocalSong) => {
     if (!window.api) return
     try {
       await window.api.http.delete(`/api/v1/local-songs/${song.id}`)
@@ -143,26 +108,25 @@ export default function FileSystemView() {
     }
   }
 
-  const handlePlay = async (song: any) => {
+  const handlePlay = async (song: LocalSong) => {
     if (currentAudio) {
       currentAudio.pause()
       currentAudio.ontimeupdate = null
       currentAudio.onended = null
     }
     if (!song.audio_path) return
-    
-    let audioSrc = song.audio_path
-    audioSrc = audioSrc.replace(/\\/g, '/')
+
+    let audioSrc = song.audio_path.replace(/\\/g, '/')
     if (!audioSrc.startsWith('file://')) {
       audioSrc = `file:///${audioSrc}`
     }
-    
+
     const audio = new Audio(audioSrc)
     setCurrentAudio(audio)
     setPlayingId(song.id)
     setIsPlaying(true)
     setCurrentTime(0)
-    
+
     audio.ontimeupdate = () => setCurrentTime(audio.currentTime)
     audio.onloadedmetadata = () => setDuration(audio.duration)
     audio.onended = () => {
@@ -175,13 +139,13 @@ export default function FileSystemView() {
       setIsPlaying(false)
       setPlayingId(null)
     }
-    
+
     await audio.play().catch(err => {
       console.error('播放失败:', err)
       setIsPlaying(false)
       setPlayingId(null)
     })
-    
+
     try {
       await window.api.http.post(`/api/v1/local-songs/${song.id}/play`)
     } catch {}
@@ -209,7 +173,20 @@ export default function FileSystemView() {
     }
   }
 
-  const filteredSongs = songs.filter((s: any) => {
+  const handleStop = () => {
+    if (currentAudio) {
+      currentAudio.pause()
+      currentAudio.ontimeupdate = null
+      currentAudio.onended = null
+      setCurrentAudio(null)
+      setPlayingId(null)
+      setIsPlaying(false)
+      setCurrentTime(0)
+      setDuration(0)
+    }
+  }
+
+  const filteredSongs = songs.filter((s) => {
     const q = searchQuery.toLowerCase()
     return !q || s.title?.toLowerCase().includes(q) || s.artist_name?.toLowerCase().includes(q)
   })
@@ -219,24 +196,11 @@ export default function FileSystemView() {
     return `${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2, '0')}`
   }
 
-  const formatSize = (bytes: number) => {
-    if (!bytes) return '0 B'
-    const units = ['B', 'KB', 'MB', 'GB']
-    let i = 0
-    let size = bytes
-    while (size >= 1024 && i < units.length - 1) {
-      size /= 1024
-      i++
-    }
-    return `${size.toFixed(1)} ${units[i]}`
-  }
-
-  // 播放进度条
   const renderPlayerBar = () => {
     if (!playingId) return null
-    
+    const song = songs.find(s => s.id === playingId)
     return (
-      <div 
+      <div
         className="flex items-center gap-3 px-6 py-3"
         style={{ borderBottom: `1px solid ${theme.border.subtle}`, background: theme.chip.activeBg + '20' }}
       >
@@ -254,11 +218,11 @@ export default function FileSystemView() {
             <Play className="w-4 h-4" fill={theme.chip.activeText} style={{ color: theme.chip.activeText }} />
           )}
         </button>
-        
+
         <span className="text-xs font-mono" style={{ color: theme.text.secondary }}>
           {formatDuration(currentTime)}
         </span>
-        
+
         <input
           type="range"
           min={0}
@@ -266,29 +230,39 @@ export default function FileSystemView() {
           value={currentTime}
           onChange={handleSeek}
           className="flex-1 h-1 rounded-full appearance-none cursor-pointer"
-          style={{ 
-            background: `linear-gradient(to right, ${theme.chip.activeText} ${(currentTime / (duration || 1)) * 100}%, ${theme.border.subtle} 0%)` 
+          style={{
+            background: `linear-gradient(to right, ${theme.chip.activeText} ${(currentTime / (duration || 1)) * 100}%, ${theme.border.subtle} 0%)`
           }}
         />
-        
+
         <span className="text-xs font-mono" style={{ color: theme.text.tertiary }}>
           {formatDuration(duration)}
         </span>
-        
-        {songs.find(s => s.id === playingId) && (
+
+        {song && (
           <span className="text-xs truncate max-w-32" style={{ color: theme.text.body }}>
-            {songs.find(s => s.id === playingId)?.title}
+            {song.title}
           </span>
         )}
+
+        <button
+          onClick={handleStop}
+          className="p-2 rounded-lg transition-colors"
+          style={{ color: theme.text.tertiary }}
+          title="停止"
+        >
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+            <rect x="4" y="4" width="16" height="16" rx="2" />
+          </svg>
+        </button>
       </div>
     )
   }
 
   return (
     <div className="flex flex-col h-full">
-      {/* 播放进度条 */}
       {renderPlayerBar()}
-      
+
       {/* 顶部工具栏 */}
       <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: `1px solid ${theme.border.subtle}` }}>
         <div className="flex items-center gap-3">
@@ -303,7 +277,7 @@ export default function FileSystemView() {
           </button>
           {libraryPath && (
             <button
-              onClick={() => scanFolder()}
+              onClick={() => scanFolder(libraryPath)}
               disabled={scanning}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all"
               style={{ background: theme.chip.inactiveBg, border: `1px solid ${theme.chip.inactiveBorder}`, color: theme.chip.inactiveText }}
@@ -328,22 +302,13 @@ export default function FileSystemView() {
 
       {/* 统计信息 */}
       <div className="flex items-center gap-6 px-6 py-3" style={{ borderBottom: `1px solid ${theme.border.subtle}` }}>
-        <span className="text-xs" style={{ color: theme.text.tertiary }}>共 <span style={{ color: theme.text.body }}>{songs.length}</span> 首歌曲</span>
-        <span className="text-xs" style={{ color: theme.text.tertiary }}>
-          <HardDrive className="w-3 h-3 inline mr-1" />
-          {formatSize(stats.totalSize)}
-        </span>
-        {stats.counts && (
-          <>
-            <span className="text-xs" style={{ color: theme.text.tertiary }}>音频 <span style={{ color: theme.text.body }}>{stats.counts.audio || 0}</span></span>
-            <span className="text-xs" style={{ color: theme.text.tertiary }}>封面 <span style={{ color: theme.text.body }}>{stats.counts.cover || 0}</span></span>
-            <span className="text-xs" style={{ color: theme.text.tertiary }}>歌词 <span style={{ color: theme.text.body }}>{stats.counts.lrc || 0}</span></span>
-          </>
-        )}
+        <span className="text-xs" style={{ color: theme.text.tertiary }}>共 <span style={{ color: theme.text.body }}>{stats.totalSongs}</span> 首歌曲</span>
+        <span className="text-xs" style={{ color: theme.text.tertiary }}><span style={{ color: theme.text.body }}>{stats.totalArtists}</span> 位歌手</span>
+        <span className="text-xs" style={{ color: theme.text.tertiary }}><span style={{ color: theme.text.body }}>{stats.totalAlbums}</span> 张专辑</span>
         <span className="text-xs ml-auto" style={{ color: theme.text.tertiary }}>存储方式：文件系统 + SQLite 索引</span>
       </div>
 
-      {/* 扫描预览 */}
+      {/* 扫描中状态 */}
       {scanning && (
         <div className="flex items-center gap-3 px-6 py-3" style={{ borderBottom: `1px solid ${theme.border.subtle}`, background: theme.chip.activeBg }}>
           <Loader2 className="w-4 h-4 animate-spin" style={{ color: theme.chip.activeText }} />
@@ -381,11 +346,13 @@ export default function FileSystemView() {
         ) : filteredSongs.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-4" style={{ color: theme.text.tertiary }}>
             <Music className="w-16 h-16 opacity-20" />
-            <p className="text-sm">文件夹中未找到音频文件，请选择包含音乐文件的文件夹</p>
+            <p className="text-sm">
+              {searchQuery ? '未找到匹配的歌曲' : '文件夹中未找到音频文件，请选择包含音乐文件的文件夹'}
+            </p>
           </div>
         ) : (
           <div className="space-y-1">
-            {filteredSongs.map((song: any) => (
+            {filteredSongs.map((song) => (
               <div
                 key={song.id}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg group transition-all cursor-pointer"
@@ -404,27 +371,34 @@ export default function FileSystemView() {
                   <p className="text-xs truncate" style={{ color: theme.text.secondary }}>
                     {song.artist_name || '未知歌手'} · {song.album_name || '未知专辑'}
                   </p>
-                  {song.audio_path && (
-                    <p className="text-xs truncate" style={{ color: theme.text.tertiary, fontFamily: 'monospace' }}>
-                      {song.audio_path}
-                    </p>
-                  )}
                 </div>
                 <span className="text-xs flex-shrink-0" style={{ color: theme.text.tertiary }}>{formatDuration(song.duration)}</span>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => handleToggleFavorite(song.id)} className="p-2 rounded-lg transition-colors"
+                  <button
+                    onClick={() => handleToggleFavorite(song.id)}
+                    className="p-2 rounded-lg transition-colors"
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = theme.chip.inactiveBg }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '' }}>
-                    <Heart className="w-4 h-4" style={{ color: song.favorite ? 'rgba(239,68,68,0.7)' : theme.text.tertiary, fill: song.favorite ? 'rgba(239,68,68,0.3)' : 'none' }} />
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '' }}
+                  >
+                    <Heart
+                      className="w-4 h-4"
+                      style={{ color: song.favorite ? 'rgba(239,68,68,0.7)' : theme.text.tertiary, fill: song.favorite ? 'rgba(239,68,68,0.3)' : 'none' }}
+                    />
                   </button>
-                  <button onClick={() => handlePlay(song)} className="p-2 rounded-lg transition-colors"
+                  <button
+                    onClick={() => handlePlay(song)}
+                    className="p-2 rounded-lg transition-colors"
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = theme.chip.inactiveBg }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '' }}>
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '' }}
+                  >
                     <Play className="w-4 h-4" style={{ color: theme.text.body }} />
                   </button>
-                  <button onClick={() => handleDelete(song)} className="p-2 rounded-lg transition-colors"
+                  <button
+                    onClick={() => handleDelete(song)}
+                    className="p-2 rounded-lg transition-colors"
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.15)' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '' }}>
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '' }}
+                  >
                     <Trash2 className="w-4 h-4" style={{ color: theme.text.tertiary }} />
                   </button>
                 </div>
