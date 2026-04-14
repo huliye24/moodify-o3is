@@ -5,7 +5,9 @@ export interface MoodTrack {
   artist: string
   mood: 'coil' | 'lost' | 'awaken' | 'expand'
   color: string
+  gradient: string
   url: string
+  cover: string
   description?: string
   tags?: string[]
 }
@@ -15,37 +17,45 @@ export const MOOD_TRACKS: MoodTrack[] = [
     name: '蜷缩 · 深蓝呼吸',
     artist: 'Moodify',
     mood: 'coil',
-    color: '#6B7A8F',
+    color: '#FF6B8A',
+    gradient: 'linear-gradient(145deg, #FFB6C1 0%, #FF8FAB 50%, #FF6B8A 100%)',
     description: '紧 · 沉 · 冷',
     tags: ['无力', '崩溃边缘', '什么都不想做'],
-    url: 'https://cdn.pixabay.com/download/audio/2022/01/20/audio_4bc6a09939.mp3'
+    url: 'https://cdn.pixabay.com/download/audio/2022/01/20/audio_4bc6a09939.mp3',
+    cover: 'https://picsum.photos/seed/1/400',
   },
   {
     name: '迷茫 · 灰雾飘散',
     artist: 'Moodify',
     mood: 'lost',
-    color: '#7A8A9F',
+    color: '#4ECDC4',
+    gradient: 'linear-gradient(145deg, #A8E6CF 0%, #6DD5C4 50%, #4ECDC4 100%)',
     description: '不确定 · 悬浮',
     tags: ['不知道方向', '停在原地', '想走但不知道往哪'],
-    url: 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_77ef6de6e5.mp3'
+    url: 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_77ef6de6e5.mp3',
+    cover: 'https://picsum.photos/seed/2/400',
   },
   {
     name: '觉醒 · 透光微暖',
     artist: 'Moodify',
     mood: 'awaken',
-    color: '#A8B8C9',
+    color: '#FFD93D',
+    gradient: 'linear-gradient(145deg, #FFE5A0 0%, #FFE066 50%, #FFD93D 100%)',
     description: '看见了什么',
     tags: ['某句话击中了你', '突然明白了什么', '光透进来了'],
-    url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3'
+    url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+    cover: 'https://picsum.photos/seed/3/400',
   },
   {
     name: '舒展 · 透明呼吸',
     artist: 'Moodify',
     mood: 'expand',
     color: '#C4D4E4',
+    gradient: 'linear-gradient(145deg, #E8F4F8 0%, #C4D4E4 50%, #A8B8C9 100%)',
     description: '打开 · 呼吸',
     tags: ['微光', '可以呼吸了', '什么都不用做'],
-    url: 'https://cdn.pixabay.com/download/audio/2021/08/09/audio_dc39bce8b3.mp3'
+    url: 'https://cdn.pixabay.com/download/audio/2021/08/09/audio_dc39bce8b3.mp3',
+    cover: 'https://picsum.photos/seed/4/400',
   }
 ]
 

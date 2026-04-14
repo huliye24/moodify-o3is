@@ -1,0 +1,221 @@
+/* =========================================
+   Voice Page Styles
+   ========================================= */
+
+.voice-page {
+  min-height: 100vh;
+  background: var(--theme-bg-base);
+  color: var(--theme-text-primary);
+}
+
+/* Sound waves animation */
+.sound-waves .wave {
+  animation: soundWave 1.5s ease-in-out infinite;
+}
+
+@keyframes soundWave {
+  0%, 100% { transform: scaleY(0.5); opacity: 0.3; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+/* Principle cards */
+.principle-card {
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  cursor: pointer;
+}
+
+.principle-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Tidal animation */
+.tidal-animation::before,
+.tidal-animation::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  animation: tidalMove 3s ease-in-out infinite;
+}
+
+@keyframes tidalMove {
+  0%, 100% { transform: translateX(-20px); opacity: 0.5; }
+  50% { transform: translateX(20px); opacity: 1; }
+}
+
+/* Voice map */
+.voice-diagram {
+  position: relative;
+  width: 400px;
+  height: 300px;
+  margin: 4rem auto;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+}
+
+.moodify-marker {
+  position: absolute;
+  top: 35%;
+  left: 25%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.marker-dot {
+  width: 16px;
+  height: 16px;
+  background: #A8B8C9;
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(168, 184, 201, 0.5);
+  animation: markerPulse 2s ease-in-out infinite;
+}
+
+@keyframes markerPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(168, 184, 201, 0.5); }
+  50% { transform: scale(1.2); box-shadow: 0 0 30px rgba(168, 184, 201, 0.8); }
+}
+
+/* Color swatches */
+.color-swatch {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s;
+  cursor: pointer;
+}
+
+.color-swatch:hover {
+  transform: scale(1.1);
+}
+
+/* Visual examples */
+.visual-example .example-image {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.fog-light {
+  background: linear-gradient(180deg, rgba(107, 122, 143, 0.3) 0%, rgba(107, 122, 143, 0.1) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fog-light::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 200, 0.6);
+  border-radius: 50%;
+  box-shadow: 0 0 30px rgba(255, 255, 200, 0.5);
+}
+
+.rainy-window {
+  background: linear-gradient(180deg, rgba(100, 110, 130, 0.4) 0%, rgba(100, 110, 130, 0.2) 100%);
+  position: relative;
+}
+
+.rainy-window::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(180deg, transparent 95%, rgba(255,255,255,0.1) 100%);
+  background-size: 100% 10px;
+  animation: rain 0.5s linear infinite;
+}
+
+@keyframes rain {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 10px; }
+}
+
+.lighthouse {
+  background: linear-gradient(180deg, rgba(20, 30, 50, 0.9) 0%, rgba(50, 70, 100, 0.3) 100%);
+  position: relative;
+}
+
+.lighthouse::before {
+  content: '';
+  position: absolute;
+  bottom: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 40px;
+  background: rgba(200, 200, 180, 0.8);
+}
+
+.lighthouse::after {
+  content: '';
+  position: absolute;
+  bottom: 60%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 15px;
+  height: 15px;
+  background: radial-gradient(circle, rgba(255, 255, 200, 0.8) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: lighthouseGlow 2s ease-in-out infinite;
+}
+
+@keyframes lighthouseGlow {
+  0%, 100% { opacity: 0.3; transform: translateX(-50%) scale(0.8); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.2); }
+}
+
+/* Case cards */
+.case-card {
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.case-card:hover {
+  border-color: rgba(168, 184, 201, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Final waves */
+.final-wave {
+  stroke-width: 1.5;
+}
+
+.fw1 { stroke: #6B7A8F; opacity: 0.3; }
+.fw2 { stroke: #A8B8C9; opacity: 0.2; }
+.fw3 { stroke: #C4D4E4; opacity: 0.1; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .principles-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .colors-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .visual-columns,
+  .donts-columns,
+  .cases-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .visual-examples {
+    grid-template-columns: 1fr;
+  }
+
+  .voice-diagram {
+    width: 100%;
+    height: 250px;
+  }
+}
