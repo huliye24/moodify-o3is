@@ -114,9 +114,9 @@ export default function PlayerControlBar({ onOpenPlaylist }: PlayerControlBarPro
             <>
               {/* 封面 */}
               <div className="w-10 h-10 rounded bg-dark-300 flex-shrink-0 overflow-hidden">
-                {currentTrack.coverImageUrl ? (
+                {currentTrack.cover_image_url ? (
                   <img
-                    src={currentTrack.coverImageUrl}
+                    src={currentTrack.cover_image_url}
                     alt=""
                     className="w-full h-full object-cover"
                   />
@@ -153,7 +153,7 @@ export default function PlayerControlBar({ onOpenPlaylist }: PlayerControlBarPro
 
             <button
               onClick={togglePlay}
-              disabled={!currentTrack?.audioUrl}
+              disabled={!currentTrack?.audio_url}
               className="p-2 bg-primary-500 hover:bg-primary-400 rounded-full text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               title={isPlaying ? '暂停' : '播放'}
             >

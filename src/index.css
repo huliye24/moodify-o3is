@@ -21,35 +21,35 @@
     font-family: 'Inter', 'Microsoft YaHei', 'PingFang SC', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background: #0a0a0f;
-    color: #C4D4E4;
+    background: #080e0a;
+    color: #C8F0D2;
   }
 
-  /* 滚动条 - Moodify 风格 */
+  /* 滚动条 - 绿色极光风格 */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: rgba(17, 17, 24, 0.5);
+    background: rgba(8,14,10,0.5);
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(107, 122, 143, 0.3);
+    background: rgba(93,185,122,0.3);
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(107, 122, 143, 0.5);
+    background: rgba(93,185,122,0.5);
   }
 
   /* 文本选择 */
   ::selection {
-    background: rgba(107, 122, 143, 0.3);
-    color: #C4D4E4;
+    background: rgba(93,185,122,0.3);
+    color: #C8F0D2;
   }
 
   /* 焦点样式 */
   :focus-visible {
-    outline: 1px solid rgba(107, 122, 143, 0.5);
+    outline: 1px solid rgba(93,185,122,0.5);
     outline-offset: 2px;
   }
 }
@@ -57,44 +57,44 @@
 @layer components {
   .btn-primary {
     @apply text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
-    background: rgba(107, 122, 143, 0.25);
-    border: 1px solid rgba(107, 122, 143, 0.35);
+    background: rgba(45,90,61,0.35);
+    border: 1px solid rgba(93,185,122,0.35);
   }
   .btn-primary:hover:not(:disabled) {
-    background: rgba(107, 122, 143, 0.35);
-    border-color: rgba(107, 122, 143, 0.5);
-    box-shadow: 0 0 16px rgba(107, 122, 143, 0.2);
+    background: rgba(45,90,61,0.45);
+    border-color: rgba(93,185,122,0.5);
+    box-shadow: 0 0 16px rgba(93,185,122,0.2);
   }
 
   .btn-secondary {
     @apply text-gray-200 px-4 py-2 rounded-lg font-medium transition-all duration-200;
-    background: rgba(107, 122, 143, 0.08);
-    border: 1px solid rgba(107, 122, 143, 0.15);
+    background: rgba(45,90,61,0.12);
+    border: 1px solid rgba(93,185,122,0.18);
   }
   .btn-secondary:hover:not(:disabled) {
-    background: rgba(107, 122, 143, 0.15);
-    border-color: rgba(107, 122, 143, 0.25);
+    background: rgba(45,90,61,0.2);
+    border-color: rgba(93,185,122,0.28);
   }
 
   .input-field {
     @apply w-full rounded-lg px-4 py-3 transition-colors;
-    background: rgba(107, 122, 143, 0.05);
-    border: 1px solid rgba(107, 122, 143, 0.15);
-    color: rgba(196, 212, 228, 0.85);
+    background: rgba(45,90,61,0.06);
+    border: 1px solid rgba(93,185,122,0.15);
+    color: rgba(200,240,210,0.85);
     font-size: 0.875rem;
   }
   .input-field::placeholder {
-    color: rgba(107, 122, 143, 0.5);
+    color: rgba(93,185,122,0.45);
   }
   .input-field:focus {
     outline: none;
-    border-color: rgba(107, 122, 143, 0.4);
-    box-shadow: 0 0 0 2px rgba(107, 122, 143, 0.1);
+    border-color: rgba(93,185,122,0.4);
+    box-shadow: 0 0 0 2px rgba(93,185,122,0.1);
   }
 
   .card {
-    background: rgba(107, 122, 143, 0.04);
-    border: 1px solid rgba(107, 122, 143, 0.12);
+    background: rgba(45,90,61,0.05);
+    border: 1px solid rgba(93,185,122,0.12);
     border-radius: 0.75rem;
     padding: 1rem;
   }
